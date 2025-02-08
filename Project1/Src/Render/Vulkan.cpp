@@ -1,9 +1,18 @@
 #include"Render/VulkanCore.h"
 
+VulkanCore::VulkanCore()
+{
+}
 
-inline void VulkanCore::initVulkan()
+VulkanCore::~VulkanCore()
+{
+}
+
+
+void VulkanCore::initVulkan()
 {
 	createInstance();
+	setupDebugMessenger();
 }
 
 inline void VulkanCore::createInstance()
@@ -12,23 +21,26 @@ inline void VulkanCore::createInstance()
 		throw std::runtime_error("validation layers requested, but not available!");
 	}
 
+	//TODO:
+	// 解决版本无法直接读取的问题
+	//uint32_t apiVersion = 0;
+	//if (vkEnumerateInstanceVersion(&apiVersion) != VK_SUCCESS) {
+	//	throw std::runtime_error("Failed to query the highest supported Vulkan version.");
+	//}//遍历设备支持的最大版本号
 
-	uint32_t apiVersion;
-	VkResult VersionResult =  vkEnumerateInstanceVersion(&apiVersion);
-	if (VersionResult != VK_SUCCESS) {
-		throw std::runtime_error("Failed to query the highest supported Vulkan version.");
-	}//遍历设备支持的最大版本号
-
-	std::cout << "Max Vulkan Version is" << apiVersion << "\n";
+	//uint32_t major = VK_VERSION_MAJOR(apiVersion);
+	//uint32_t minor = VK_VERSION_MINOR(apiVersion);
+	//uint32_t patch = VK_VERSION_PATCH(apiVersion);
+	//std::cout << "Max Vulkan Version: " << major << "." << minor << "." << patch << "\n";
 
 	VkApplicationInfo appInfo{};//创建app信息，包括版本号版本名称等等
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.pApplicationName = "CatRender";
-	appInfo.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0, 0);
+	appInfo.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
 
 	appInfo.pEngineName = "CatRenderEngine";
-	appInfo.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0, 0);
-	appInfo.apiVersion = apiVersion;
+	appInfo.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
+	appInfo.apiVersion = VK_VERSION_1_1;
 
 	//获取对应的拓展Extension
 	auto extension = getRequiredExtensions();

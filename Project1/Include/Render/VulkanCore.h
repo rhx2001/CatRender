@@ -1,11 +1,9 @@
 #pragma once
-
-#include <vulkan/vulkan.h>
+#include "Window/window.h" 
 #include <stdexcept>
 #include <iostream>
 #include <vector>
-
-#include "Window/window.h" 
+#include <cstdlib>
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
@@ -25,7 +23,7 @@ public:
     
 private:
     VkInstance instance = VK_NULL_HANDLE;
-    VkDebugUtilsMessengerEXT debugMessenger;
+    VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
 
 private:
 	void createInstance();
@@ -67,12 +65,4 @@ private:
     void setupDebugMessenger();//因为把创建messenger创建到pnext下的话只会在创建instance时的错误，但是并没有创建VkDebugUtilsMessengerEXT，所以需要单独创建
 };
 
-VulkanCore::VulkanCore()
-{
-    initVulkan();
-}
-
-VulkanCore::~VulkanCore()
-{
-}
 

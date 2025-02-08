@@ -1,7 +1,6 @@
 #pragma once
-
-#include <memory>
 #include "Render/VulkanCore.h"
+#include <memory>
 
 const int WIDTH = 640;
 const int HEIGHT = 480;
@@ -19,16 +18,7 @@ public:
 
 private:
 	std::unique_ptr<VulkanCore> Renderer;
-	std::unique_ptr<Window> Window;
-	std::unique_ptr<Scene> scene;
-
+	std::unique_ptr<Window> GlfwWindow;
 };
 
-CatRender::CatRender()
-{
-}
-
-CatRender::~CatRender()
-{
-}
 
