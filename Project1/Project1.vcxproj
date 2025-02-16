@@ -26,7 +26,7 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Src\App\CatRender.cpp" />
-    <ClCompile Include="Src\Render\Vulkan.cpp" />
+    <ClCompile Include="Src\Render\VulkanCore.cpp" />
     <ClCompile Include="Src\Window\Window.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

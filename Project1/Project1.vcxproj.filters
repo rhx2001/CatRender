@@ -47,7 +47,7 @@
     <ClCompile Include="Src\App\CatRender.cpp">
       <Filter>源文件\App</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Render\Vulkan.cpp">
+    <ClCompile Include="Src\Render\VulkanCore.cpp">
       <Filter>源文件\Render</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
