@@ -28,5 +28,10 @@ void CatRender::mainloop()
         glfwPollEvents();
         Render->drawFrame();
     }
-    //vkDeviceWaitIdle(device);
+    //vkDeviceWaitIdle(Render->getDecive());
+}
+
+void CatRender::cleanup()
+{
+    glfwTerminate();
 }

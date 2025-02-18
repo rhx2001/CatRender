@@ -59,6 +59,16 @@ public:
 
     void drawFrame();
 
+    VkDevice getDevice() const { return device; };
+
+    VkPhysicalDevice getPhysicalDevice() const { return physicalDevice; };
+
+    VkQueue getGraphicsQueue() const { return graphicsQueue; }
+
+    VkRenderPass getRenderPass() const { return renderPass; }
+
+    size_t getSwapChainImageCount() const { return swapChainImages.size(); }
+
 public:
 
     struct QueueFamilyIndices {
@@ -139,7 +149,11 @@ public:
 
 public:
     std::vector<Vertex> vertices;
+
     std::vector<uint32_t> indices;
+
+public:
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
 
 private:
@@ -262,7 +276,7 @@ private:
 
     bool isDeviceSuitable(VkPhysicalDevice device);//用于选择适合的设备
 
-    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+
 
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 
@@ -309,6 +323,8 @@ private:
     void recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32_t& imageIndex);
 
     void updateUniformBuffer(size_t currentImage);
+
+
 };
 
 namespace std {

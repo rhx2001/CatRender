@@ -6,4 +6,5 @@ int main()
 	CatRender render;
 	render.init();
 	render.mainloop();
+	render.cleanup();
 }

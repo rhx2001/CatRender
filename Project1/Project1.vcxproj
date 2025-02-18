@@ -20,14 +20,37 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\App\CatRender.h" />
+    <ClInclude Include="Include\Gui\GUIManager.h" />
+    <ClInclude Include="Include\Gui\imconfig.h" />
+    <ClInclude Include="Include\Gui\imgui.h" />
+    <ClInclude Include="Include\Gui\imgui_impl_glfw.h" />
+    <ClInclude Include="Include\Gui\imgui_impl_vulkan.h" />
+    <ClInclude Include="Include\Gui\imgui_internal.h" />
+    <ClInclude Include="Include\Gui\imstb_rectpack.h" />
+    <ClInclude Include="Include\Gui\imstb_textedit.h" />
+    <ClInclude Include="Include\Gui\imstb_truetype.h" />
     <ClInclude Include="Include\Render\VulkanCore.h" />
     <ClInclude Include="Include\Window\window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Include\Gui\imgui.cpp" />
+    <ClCompile Include="Include\Gui\imgui_demo.cpp" />
+    <ClCompile Include="Include\Gui\imgui_draw.cpp" />
+    <ClCompile Include="Include\Gui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="Include\Gui\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="Include\Gui\imgui_tables.cpp" />
+    <ClCompile Include="Include\Gui\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Src\App\CatRender.cpp" />
+    <ClCompile Include="Src\Gui\GUIManager.cpp" />
     <ClCompile Include="Src\Render\VulkanCore.cpp" />
     <ClCompile Include="Src\Window\Window.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\RuanCat\Downloads\imgui-1.91.8\misc\debuggers\imgui.natstepfilter" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="C:\Users\RuanCat\Downloads\imgui-1.91.8\misc\debuggers\imgui.natvis" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

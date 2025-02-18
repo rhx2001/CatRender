@@ -12,11 +12,123 @@ VulkanCore::VulkanCore()
 
 VulkanCore::~VulkanCore()
 {
-	if (instance!=VK_NULL_HANDLE) {
-		vkDestroyInstance(instance, nullptr);
+	vkDeviceWaitIdle(device);
+	// 0. 确保设备操作完成
+	if (device != VK_NULL_HANDLE) {
+		vkDeviceWaitIdle(device);
 	}
-}
 
+	// 1. 销毁同步对象
+	for (auto& semaphore : imageAvailableSemaphores) {
+		vkDestroySemaphore(device, semaphore, nullptr);
+	}
+	for (auto& semaphore : renderFinishedSemaphores) {
+		vkDestroySemaphore(device, semaphore, nullptr);
+	}
+	for (auto& fence : inFlightFences) {
+		vkDestroyFence(device, fence, nullptr);
+	}
+
+	// 2. 销毁命令缓冲区和命令池
+	if (!commandBuffers.empty() && commandPool != VK_NULL_HANDLE) {
+		vkFreeCommandBuffers(device, commandPool,
+			static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+	}
+	if (commandPool != VK_NULL_HANDLE) {
+		vkDestroyCommandPool(device, commandPool, nullptr);
+	}
+
+	// 3. 销毁描述符池和布局
+	if (descriptorPool != VK_NULL_HANDLE) {
+		vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+	}
+	if (descriptorSetLayout != VK_NULL_HANDLE) {
+		vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+	}
+
+	// 4. 销毁交换链相关资源
+	for (auto& framebuffer : SwapChainFramebuffers) {
+		vkDestroyFramebuffer(device, framebuffer, nullptr);
+	}
+	for (auto& imageView : swapChainImageViews) {
+		vkDestroyImageView(device, imageView, nullptr);
+	}
+	if (swapChain != VK_NULL_HANDLE) {
+		vkDestroySwapchainKHR(device, swapChain, nullptr);
+	}
+
+	// 5. 销毁深度缓冲资源
+	if (depthImageView != VK_NULL_HANDLE) {
+		vkDestroyImageView(device, depthImageView, nullptr);
+	}
+	if (depthImage != VK_NULL_HANDLE) {
+		vkDestroyImage(device, depthImage, nullptr);
+	}
+	if (depthImageMemory != VK_NULL_HANDLE) {
+		vkFreeMemory(device, depthImageMemory, nullptr);
+	}
+
+	// 6. 销毁图形管线相关
+	if (graphicsPipeline != VK_NULL_HANDLE) {
+		vkDestroyPipeline(device, graphicsPipeline, nullptr);
+	}
+	if (pipelineLayout != VK_NULL_HANDLE) {
+		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+	}
+	if (renderPass != VK_NULL_HANDLE) {
+		vkDestroyRenderPass(device, renderPass, nullptr);
+	}
+
+	// 7. 销毁纹理资源
+	if (textureSampler != VK_NULL_HANDLE) {
+		vkDestroySampler(device, textureSampler, nullptr);
+	}
+	if (textureImageView != VK_NULL_HANDLE) {
+		vkDestroyImageView(device, textureImageView, nullptr);
+	}
+	if (textureImage != VK_NULL_HANDLE) {
+		vkDestroyImage(device, textureImage, nullptr);
+	}
+	if (textureImageMemory != VK_NULL_HANDLE) {
+		vkFreeMemory(device, textureImageMemory, nullptr);
+	}
+
+	// 8. 销毁顶点/索引/统一缓冲区
+	if (vertexBuffer != VK_NULL_HANDLE) {
+		vkDestroyBuffer(device, vertexBuffer, nullptr);
+	}
+	if (vertexBufferMemory != VK_NULL_HANDLE) {
+		vkFreeMemory(device, vertexBufferMemory, nullptr);
+	}
+	if (indexBuffer != VK_NULL_HANDLE) {
+		vkDestroyBuffer(device, indexBuffer, nullptr);
+	}
+	if (indexBufferMemory != VK_NULL_HANDLE) {
+		vkFreeMemory(device, indexBufferMemory, nullptr);
+	}
+	for (size_t i = 0; i < uniformBuffers.size(); i++) {
+		vkDestroyBuffer(device, uniformBuffers[i], nullptr);
+		vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
+	}
+
+	// 9. 销毁逻辑设备
+	if (device != VK_NULL_HANDLE) {
+		vkDestroyDevice(device, nullptr);
+	}
+
+	// 10. 销毁Surface和调试信使
+	if (surface != VK_NULL_HANDLE) {
+		vkDestroySurfaceKHR(instance, surface, nullptr);
+	}
+	if (debugMessenger != VK_NULL_HANDLE) {
+		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)
+			vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+		if (func) {
+			func(instance, debugMessenger, nullptr);
+		}
+	}
+
+}
 
 void VulkanCore::initVulkan(GLFWwindow* window)
 {
@@ -639,6 +751,7 @@ inline void VulkanCore::createTextureImage()
 	transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, 
 		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
 	copyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+	//
 	//transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);
 
 	generateMipmaps(textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevels);//生成贴图对应的mipmap
@@ -1312,10 +1425,9 @@ void VulkanCore::generateMipmaps(VkImage image, VkFormat imageFormat, int32_t te
 		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 		barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-		barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT; //这里是读取，我们要将上一级的mipmap读取到下一级的mipmap中，
-															//barrier是为了防止先读后写发生，并且布局也要改变，从读布局变成写布局
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 		vkCmdPipelineBarrier(commandBuffer,
-			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+			VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
 			0, nullptr,
 			0, nullptr,
 			1, &barrier);
@@ -1416,18 +1528,24 @@ void VulkanCore::recreateSwapChain()
 
 void VulkanCore::cleanupSwapChain()
 {
-	vkDestroyImageView(device, depthImageView, nullptr);
-	vkDestroyImage(device, depthImage, nullptr);
+	if (depthImageView != VK_NULL_HANDLE)
+		vkDestroyImageView(device, depthImageView, nullptr);
+	if (depthImage != VK_NULL_HANDLE)
+		vkDestroyImage(device, depthImage, nullptr);
+	if (depthImageMemory != VK_NULL_HANDLE)
 	vkFreeMemory(device, depthImageMemory, nullptr);
+
 	for (auto framebuffer : SwapChainFramebuffers) {
-		vkDestroyFramebuffer(device, framebuffer, nullptr);
+		if (framebuffer != VK_NULL_HANDLE)
+			vkDestroyFramebuffer(device, framebuffer, nullptr);
 	}
 
 	for (auto imageView : swapChainImageViews) {
-		vkDestroyImageView(device, imageView, nullptr);
+		if (imageView != VK_NULL_HANDLE)
+			vkDestroyImageView(device, imageView, nullptr);
 	}
-
-	vkDestroySwapchainKHR(device, swapChain, nullptr);
+	if(swapChain!=VK_NULL_HANDLE)
+		vkDestroySwapchainKHR(device, swapChain, nullptr);
 }
 
 void VulkanCore::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32_t& imageIndex)
@@ -1505,3 +1623,4 @@ VkFormat VulkanCore::findDepthFormat() {
 		VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
 	);
 }
+

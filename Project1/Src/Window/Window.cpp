@@ -7,6 +7,12 @@ void Window::initWindow(const std::string& title, int width, int height)
     window = glfwCreateWindow(width, height, "Vulkan", NULL, NULL);
 }
 
+Window::~Window()
+{
+    glfwDestroyWindow(window);
+}
+
+
 GLFWwindow* Window::getWindowHandle()
 {
     return window;

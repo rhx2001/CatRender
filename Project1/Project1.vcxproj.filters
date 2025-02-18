@@ -31,6 +31,15 @@
     <Filter Include="源文件\Window">
       <UniqueIdentifier>{926c1338-de01-443b-ad68-28e3f428f082}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\Gui">
+      <UniqueIdentifier>{4a6d60f3-9322-4e34-8b70-b37134ebe8aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\Gui">
+      <UniqueIdentifier>{211d38e1-5ce1-4252-9542-34939f25e6e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Gui\Imgui">
+      <UniqueIdentifier>{7758d73e-77ff-43cd-852b-0369dc226507}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\App\CatRender.h">
@@ -41,6 +50,33 @@
     </ClInclude>
     <ClInclude Include="Include\Window\window.h">
       <Filter>头文件\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Gui\imstb_truetype.h">
+      <Filter>头文件\Gui\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Gui\imconfig.h">
+      <Filter>头文件\Gui\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Gui\imgui.h">
+      <Filter>头文件\Gui\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Gui\imgui_internal.h">
+      <Filter>头文件\Gui\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Gui\imstb_rectpack.h">
+      <Filter>头文件\Gui\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Gui\imstb_textedit.h">
+      <Filter>头文件\Gui\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Gui\imgui_impl_glfw.h">
+      <Filter>头文件\Gui\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Gui\imgui_impl_vulkan.h">
+      <Filter>头文件\Gui\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Gui\GUIManager.h">
+      <Filter>头文件\Gui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -56,5 +92,35 @@
     <ClCompile Include="Src\Window\Window.cpp">
       <Filter>源文件\Window</Filter>
     </ClCompile>
+    <ClCompile Include="Include\Gui\imgui.cpp">
+      <Filter>头文件\Gui\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Include\Gui\imgui_demo.cpp">
+      <Filter>头文件\Gui\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Include\Gui\imgui_draw.cpp">
+      <Filter>头文件\Gui\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Include\Gui\imgui_tables.cpp">
+      <Filter>头文件\Gui\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Include\Gui\imgui_widgets.cpp">
+      <Filter>头文件\Gui\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Include\Gui\imgui_impl_glfw.cpp">
+      <Filter>头文件\Gui\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Include\Gui\imgui_impl_vulkan.cpp">
+      <Filter>头文件\Gui\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Gui\GUIManager.cpp">
+      <Filter>源文件\Gui</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\RuanCat\Downloads\imgui-1.91.8\misc\debuggers\imgui.natstepfilter" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="C:\Users\RuanCat\Downloads\imgui-1.91.8\misc\debuggers\imgui.natvis" />
   </ItemGroup>
 </Project>

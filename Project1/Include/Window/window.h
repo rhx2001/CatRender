@@ -5,7 +5,7 @@
 #include<string>
 class Window {
 public:
-
+    ~Window();
 public:
     void initWindow(const std::string& title, int width, int height);
     GLFWwindow* getWindowHandle();
