@@ -8,13 +8,10 @@
 #include "Window/window.h" 
 #include "glm/glm.hpp"
 #include "glm/gtx/hash.hpp"
-#include "stb/stb_image.h"
-#include "tiny_obj_loader.h"
-#include <unordered_map>
+#include "stb_image/stb_image.h"
 #include <stdexcept>
 #include <iostream>
 #include <vector>
-#include <cstdlib>
 #include <optional>
 #include <fstream>
 #include <array>
@@ -24,6 +21,7 @@
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
 #else
+class GUIManager;
 const bool enableValidationLayers = true;
 #endif
 
@@ -55,7 +53,7 @@ public:
 	VulkanCore();
 	~VulkanCore();
 
-	void initVulkan(GLFWwindow* window);
+	void initVulkan(GLFWwindow* window, GUIManager* m_GUIManager);
 
     void drawFrame();
 
@@ -68,6 +66,10 @@ public:
     VkRenderPass getRenderPass() const { return renderPass; }
 
     size_t getSwapChainImageCount() const { return swapChainImages.size(); }
+
+	VkPipeline getGraphicsPipeline() const { return graphicsPipeline; }
+
+	VkInstance getInstance() const { return instance; }
 
 public:
 
@@ -216,6 +218,8 @@ private:
 
     bool framebufferResized = false;
 
+	GUIManager* m_GUIManager = nullptr;
+
 private:
 	void createInstance();
     void createSurface(GLFWwindow* window);
@@ -278,7 +282,7 @@ private:
 
 
 
-	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) const;
 
 	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 

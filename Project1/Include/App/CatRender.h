@@ -1,6 +1,7 @@
 #pragma once
-#include "Render/VulkanCore.h"
+#include "Renderer/VulkanCore.h"
 #include <memory>
+#include "Gui/GUIManager.h"
 
 const int WIDTH = 640;
 const int HEIGHT = 480;
@@ -19,6 +20,7 @@ public:
 private:
 	std::unique_ptr<VulkanCore> Render;
 	std::unique_ptr<Window> GlfwWindow;
+	std::unique_ptr<GUIManager> m_GUIManager;
 };
 
 

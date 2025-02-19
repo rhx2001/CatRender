@@ -1,9 +1,13 @@
 ﻿#define STB_IMAGE_IMPLEMENTATION
 #define TINYOBJLOADER_IMPLEMENTATION
-#include"Render/VulkanCore.h"
+#include"Renderer/VulkanCore.h"
+#include "tinyobjloader/tiny_obj_loader.h"
 #include <set>
 #include <chrono>
+#include <unordered_map>
+#include <cstdlib>
 
+#include "Gui/GUIManager.h"
 
 VulkanCore::VulkanCore()
 {
@@ -130,9 +134,10 @@ VulkanCore::~VulkanCore()
 
 }
 
-void VulkanCore::initVulkan(GLFWwindow* window)
+void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 {
 	this->window = window;
+	this->m_GUIManager = m_GUIManager;
 
 	createInstance();
 	setupDebugMessenger();
@@ -443,7 +448,7 @@ inline void VulkanCore::createRenderPass()
 	*	const VkRenderingAttachmentInfo*    pStencilAttachment;
 	} VkRenderingInfo;
 	*/
-	//首先填充关于颜色附件的信息
+	//首先填充关于用于显示的颜色附件的信息
 	VkAttachmentDescription colorAttachment{};
 	colorAttachment.format = swapChainImageFormat; // 附件的格式（与交换链图像格式一致）
 	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT; // 采样数（无多重采样）
@@ -489,6 +494,52 @@ inline void VulkanCore::createRenderPass()
 	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // 目标阶段：颜色附件输出
 	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // 目标访问掩码：颜色附件写入
 
+
+	//用于imgui的color attachment
+	VkAttachmentDescription colorAttachment_ImGui{};
+	colorAttachment_ImGui.format = swapChainImageFormat; // 附件的格式（与交换链图像格式一致）
+	colorAttachment_ImGui.samples = VK_SAMPLE_COUNT_1_BIT; // 采样数（无多重采样）
+	colorAttachment_ImGui.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD; // 加载操作：清除附件
+	colorAttachment_ImGui.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // 存储操作：保存附件内容
+	colorAttachment_ImGui.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE; // 模板加载操作：不关心
+	colorAttachment_ImGui.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; // 模板存储操作：不关心
+	colorAttachment_ImGui.initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR; // 初始布局：未定义
+	colorAttachment_ImGui.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR; // 最终布局：用于呈现
+
+	VkAttachmentReference colorAttachmentRef_ImGui{};
+	colorAttachmentRef_ImGui.attachment = 0;
+	colorAttachmentRef_ImGui.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	VkAttachmentReference depthAttachmentRef_ImGui{};
+	colorAttachmentRef_ImGui.attachment = 1;
+	colorAttachmentRef_ImGui.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+	VkSubpassDescription subpass_ImGui{};
+	subpass_ImGui.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS; // 绑定点：图形管线
+	subpass_ImGui.colorAttachmentCount = 1; // 颜色附件数量
+	subpass_ImGui.pColorAttachments = &colorAttachmentRef_ImGui; // 颜色附件引用
+	subpass_ImGui.pDepthStencilAttachment = &depthAttachmentRef_ImGui; // 深度附件引用
+
+	VkSubpassDependency dependency_ImGui{};
+	dependency_ImGui.srcSubpass = 0; // 0号通道用于渲染场景
+	dependency_ImGui.dstSubpass = 1; // 目标子通道,是下一个子通道
+	dependency_ImGui.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // 源阶段：颜色附件输出
+	dependency_ImGui.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // 源访问掩码：颜色附件写入
+	dependency_ImGui.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // 目标阶段：颜色附件输出
+	dependency_ImGui.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // 目标访问掩码：颜色附件写入
+
+
+	std::array<VkAttachmentDescription, 2> attachments_ImGui = { colorAttachment_ImGui, depthAttachment };
+	VkRenderPassCreateInfo renderPassInfo_ImGui{};
+	renderPassInfo_ImGui.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	renderPassInfo_ImGui.attachmentCount = static_cast<uint32_t>(attachments_ImGui.size());
+	renderPassInfo_ImGui.pAttachments = attachments_ImGui.data();
+	renderPassInfo_ImGui.subpassCount = 1;
+	renderPassInfo_ImGui.pSubpasses = &subpass_ImGui;
+	renderPassInfo_ImGui.dependencyCount = 1;
+
+
+
 	//填充渲染通道信息。最后，将所有配置传递给 VkRenderPassCreateInfo 并创建 Render Pass。
 	std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
 	VkRenderPassCreateInfo renderPassInfo{};
@@ -499,6 +550,8 @@ inline void VulkanCore::createRenderPass()
 	renderPassInfo.pSubpasses = &subpass;
 	renderPassInfo.dependencyCount = 1;
 	renderPassInfo.pDependencies = &dependency;
+
+
 
 	VK_CHECK(vkCreateRenderPass(device, &renderPassInfo, NULL, &renderPass))
 }
@@ -1090,7 +1143,7 @@ inline VulkanCore::QueueFamilyIndices VulkanCore::findQueueFamilies(VkPhysicalDe
 	return indices;
 }
 
-inline VulkanCore::SwapChainSupportDetails VulkanCore::querySwapChainSupport(VkPhysicalDevice device) {
+inline VulkanCore::SwapChainSupportDetails VulkanCore::querySwapChainSupport(VkPhysicalDevice const device) const {
 	SwapChainSupportDetails details;
 
 	//首先查询交换链的表面能力
@@ -1517,7 +1570,6 @@ void VulkanCore::recreateSwapChain()
 	}
 
 	vkDeviceWaitIdle(device);
-
 	cleanupSwapChain();
 
 	createSwapChain();
@@ -1597,8 +1649,8 @@ void VulkanCore::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
 
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+	m_GUIManager->EndFrame(commandBuffer);
 	vkCmdEndRenderPass(commandBuffer);
-	
 	VK_CHECK(vkEndCommandBuffer(commandBuffer));
 }
 

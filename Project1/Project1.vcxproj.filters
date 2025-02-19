@@ -19,9 +19,6 @@
     <Filter Include="源文件\App">
       <UniqueIdentifier>{961737e5-0e1c-485c-a7eb-944629281fa2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\Render">
-      <UniqueIdentifier>{de66e42d-aae9-4aaa-b1ce-9bca57216d7e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="源文件\Render">
       <UniqueIdentifier>{fbe8fe0b-19f0-4281-915b-e07a6cc8cdeb}</UniqueIdentifier>
     </Filter>
@@ -40,13 +37,13 @@
     <Filter Include="头文件\Gui\Imgui">
       <UniqueIdentifier>{7758d73e-77ff-43cd-852b-0369dc226507}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\Renderer">
+      <UniqueIdentifier>{de66e42d-aae9-4aaa-b1ce-9bca57216d7e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\App\CatRender.h">
       <Filter>头文件\App</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Render\VulkanCore.h">
-      <Filter>头文件\Render</Filter>
     </ClInclude>
     <ClInclude Include="Include\Window\window.h">
       <Filter>头文件\Window</Filter>
@@ -78,13 +75,13 @@
     <ClInclude Include="Include\Gui\GUIManager.h">
       <Filter>头文件\Gui</Filter>
     </ClInclude>
+    <ClInclude Include="Include\Renderer\VulkanCore.h">
+      <Filter>头文件\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\App\CatRender.cpp">
       <Filter>源文件\App</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\Render\VulkanCore.cpp">
-      <Filter>源文件\Render</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
@@ -116,11 +113,8 @@
     <ClCompile Include="Src\Gui\GUIManager.cpp">
       <Filter>源文件\Gui</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="C:\Users\RuanCat\Downloads\imgui-1.91.8\misc\debuggers\imgui.natstepfilter" />
-  </ItemGroup>
-  <ItemGroup>
-    <Natvis Include="C:\Users\RuanCat\Downloads\imgui-1.91.8\misc\debuggers\imgui.natvis" />
+    <ClCompile Include="Src\Renderer\VulkanCore.cpp">
+      <Filter>源文件\Render</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

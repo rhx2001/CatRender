@@ -1,12 +1,14 @@
 #include "Gui/GUIManager.h"
+#include "Gui/imgui.h"
 #include "Gui/imgui_impl_glfw.h"
 #include "Gui/imgui_impl_vulkan.h"
+#include "Renderer/VulkanCore.h"
 
-GUIManager::GUIManager(GLFWwindow* window, VkInstance instance, VulkanCore* vulkanCore)
-    : m_Window(window), m_Instance(instance), m_VulkanCore(vulkanCore) {}
+GUIManager::GUIManager(){};
 
 GUIManager::~GUIManager()
 {
+    vkDeviceWaitIdle(m_VulkanCore->getDevice());
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -16,8 +18,11 @@ GUIManager::~GUIManager()
     }
 }
 
-void GUIManager::init()
+void GUIManager::init(GLFWwindow* window, VkInstance instance, VulkanCore* vulkanCore)
 {
+    m_Window = window;
+    m_Instance = instance;
+	m_VulkanCore = vulkanCore;
     // 初始化 ImGui 上下文
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -47,9 +52,10 @@ void GUIManager::init()
     init_info.ImageCount = m_VulkanCore->getSwapChainImageCount();
     init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     init_info.RenderPass = m_VulkanCore->getRenderPass();
+
     ImGui_ImplVulkan_Init(&init_info);
 
-
+    ImGui_ImplVulkan_CreateFontsTexture();
 
 }
 
@@ -57,6 +63,8 @@ void GUIManager::BeginFrame() {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+
+
 
     // 示例：绘制调试窗口
     ImGui::ShowDemoWindow();

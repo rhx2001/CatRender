@@ -1,15 +1,14 @@
 #pragma once
-#include "imgui.h"
-#include "Render/VulkanCore.h"
+#include "Renderer/VulkanCore.h"
 
 class GUIManager
 {
 public:
-	GUIManager(GLFWwindow* window, VkInstance instance, VulkanCore* vulkanCore);
+	GUIManager();
 	~GUIManager();
 
 public:
-	void init();					// 初始化GUI
+	void init(GLFWwindow* window, VkInstance instance, VulkanCore* vulkanCore);					// 初始化GUI
 	void BeginFrame();               // 开始新帧
 	void EndFrame(VkCommandBuffer cmd); // 结束帧并提交绘制命令
 	void OnResize();                 // 窗口大小变化处理

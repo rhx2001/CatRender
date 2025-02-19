@@ -29,7 +29,7 @@
     <ClInclude Include="Include\Gui\imstb_rectpack.h" />
     <ClInclude Include="Include\Gui\imstb_textedit.h" />
     <ClInclude Include="Include\Gui\imstb_truetype.h" />
-    <ClInclude Include="Include\Render\VulkanCore.h" />
+    <ClInclude Include="Include\Renderer\VulkanCore.h" />
     <ClInclude Include="Include\Window\window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -43,14 +43,8 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Src\App\CatRender.cpp" />
     <ClCompile Include="Src\Gui\GUIManager.cpp" />
-    <ClCompile Include="Src\Render\VulkanCore.cpp" />
+    <ClCompile Include="Src\Renderer\VulkanCore.cpp" />
     <ClCompile Include="Src\Window\Window.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="C:\Users\RuanCat\Downloads\imgui-1.91.8\misc\debuggers\imgui.natstepfilter" />
-  </ItemGroup>
-  <ItemGroup>
-    <Natvis Include="C:\Users\RuanCat\Downloads\imgui-1.91.8\misc\debuggers\imgui.natvis" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -142,13 +136,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\vrlab\vulkan\CatRender\Project1\Include;F:\clib\Vulkan\include;F:\clib\OpenGl\include;F:\VulkanSdk\Include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\CatRander\Project1\Include;E:\Clib\include;C:\VulkanSDK\1.3.296.0\Include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>F:\clib\OpenGl\Lib;F:\VulkanSdk\Lib;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:\Clib\Library;C:\VulkanSDK\1.3.296.0\Lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -161,7 +155,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>D:\vrlab\vulkan\CatRender\Project1\Include;F:\clib\Vulkan\include;F:\clib\OpenGl\include;F:\VulkanSdk\Include;F:\clib\OpenGl\include;F:\VulkanSdk\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\CatRander\Project1\Include;E:\Clib\include;C:\VulkanSDK\1.3.296.0\Include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -169,7 +163,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>glfw3.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>F:\clib\OpenGl\Lib;F:\VulkanSdk\Lib;F:\VulkanSdk\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:\Clib\Library;C:\VulkanSDK\1.3.296.0\Lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
