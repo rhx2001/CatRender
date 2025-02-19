@@ -434,6 +434,12 @@ inline void VulkanCore::createImageViews()
 
 inline void VulkanCore::createRenderPass()
 {
+
+	std::vector<VkAttachmentDescription> attachments = {};
+	std::vector<VkSubpassDescription> subpasses = {};
+	std::vector<VkSubpassDependency> dependencies = {};
+
+
 	/*
 	* typedef struct VkRenderingInfo {
 	*	VkStructureType                     sType;
@@ -457,8 +463,9 @@ inline void VulkanCore::createRenderPass()
 	colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE; // 模板加载操作：不关心
 	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; // 模板存储操作：不关心
 	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED; // 初始布局：未定义
-	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR; // 最终布局：用于呈现
-	//颜色附件索引
+	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR; // 最终布局：用于呈现颜色附件索引
+	attachments.push_back(colorAttachment);
+
 	VkAttachmentReference colorAttachmentRef{};
 	colorAttachmentRef.attachment = 0;
 	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -472,8 +479,9 @@ inline void VulkanCore::createRenderPass()
 	depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE; // 模板加载操作：不关心
 	depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; // 模板存储操作：不关心
 	depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED; // 初始布局：未定义
-	depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // 最终布局：深度附件
-	//深度附件索引
+	depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // 最终布局：深度附件深度附件索引
+	attachments.push_back(depthAttachment);
+
 	VkAttachmentReference depthAttachmentRef{};
 	depthAttachmentRef.attachment = 1;
 	depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
@@ -484,6 +492,7 @@ inline void VulkanCore::createRenderPass()
 	subpass.colorAttachmentCount = 1; // 颜色附件数量
 	subpass.pColorAttachments = &colorAttachmentRef; // 颜色附件引用
 	subpass.pDepthStencilAttachment = &depthAttachmentRef; // 深度附件引用
+	subpasses.push_back(subpass);
 
 	//填充关于依赖的信息
 	VkSubpassDependency dependency{};
@@ -493,7 +502,9 @@ inline void VulkanCore::createRenderPass()
 	dependency.srcAccessMask = 0; // 源访问掩码：无
 	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // 目标阶段：颜色附件输出
 	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // 目标访问掩码：颜色附件写入
+	dependencies.push_back(dependency);
 
+	//-----------------------------------------------------------------------------------------------------------
 
 	//用于imgui的color attachment
 	VkAttachmentDescription colorAttachment_ImGui{};
@@ -503,22 +514,19 @@ inline void VulkanCore::createRenderPass()
 	colorAttachment_ImGui.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // 存储操作：保存附件内容
 	colorAttachment_ImGui.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE; // 模板加载操作：不关心
 	colorAttachment_ImGui.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; // 模板存储操作：不关心
-	colorAttachment_ImGui.initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR; // 初始布局：未定义
+	colorAttachment_ImGui.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; // 初始布局：
 	colorAttachment_ImGui.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR; // 最终布局：用于呈现
+	attachments.push_back(colorAttachment_ImGui);
 
 	VkAttachmentReference colorAttachmentRef_ImGui{};
-	colorAttachmentRef_ImGui.attachment = 0;
+	colorAttachmentRef_ImGui.attachment = 2;
 	colorAttachmentRef_ImGui.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-	VkAttachmentReference depthAttachmentRef_ImGui{};
-	colorAttachmentRef_ImGui.attachment = 1;
-	colorAttachmentRef_ImGui.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 	VkSubpassDescription subpass_ImGui{};
 	subpass_ImGui.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS; // 绑定点：图形管线
 	subpass_ImGui.colorAttachmentCount = 1; // 颜色附件数量
 	subpass_ImGui.pColorAttachments = &colorAttachmentRef_ImGui; // 颜色附件引用
-	subpass_ImGui.pDepthStencilAttachment = &depthAttachmentRef_ImGui; // 深度附件引用
+	subpasses.push_back(subpass_ImGui);
 
 	VkSubpassDependency dependency_ImGui{};
 	dependency_ImGui.srcSubpass = 0; // 0号通道用于渲染场景
@@ -526,30 +534,20 @@ inline void VulkanCore::createRenderPass()
 	dependency_ImGui.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // 源阶段：颜色附件输出
 	dependency_ImGui.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // 源访问掩码：颜色附件写入
 	dependency_ImGui.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // 目标阶段：颜色附件输出
-	dependency_ImGui.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // 目标访问掩码：颜色附件写入
+	dependency_ImGui.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT; // 目标访问掩码：颜色附件读取
+	dependencies.push_back(dependency_ImGui);
 
-
-	std::array<VkAttachmentDescription, 2> attachments_ImGui = { colorAttachment_ImGui, depthAttachment };
-	VkRenderPassCreateInfo renderPassInfo_ImGui{};
-	renderPassInfo_ImGui.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	renderPassInfo_ImGui.attachmentCount = static_cast<uint32_t>(attachments_ImGui.size());
-	renderPassInfo_ImGui.pAttachments = attachments_ImGui.data();
-	renderPassInfo_ImGui.subpassCount = 1;
-	renderPassInfo_ImGui.pSubpasses = &subpass_ImGui;
-	renderPassInfo_ImGui.dependencyCount = 1;
-
-
+	//-------------------------------------------------------------------------------------------------
 
 	//填充渲染通道信息。最后，将所有配置传递给 VkRenderPassCreateInfo 并创建 Render Pass。
-	std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
 	VkRenderPassCreateInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 	renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 	renderPassInfo.pAttachments = attachments.data();
-	renderPassInfo.subpassCount = 1;
-	renderPassInfo.pSubpasses = &subpass;
-	renderPassInfo.dependencyCount = 1;
-	renderPassInfo.pDependencies = &dependency;
+	renderPassInfo.subpassCount = static_cast<uint32_t>(subpasses.size());	
+	renderPassInfo.pSubpasses = subpasses.data();
+	renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+	renderPassInfo.pDependencies = dependencies.data();
 
 
 
@@ -760,9 +758,10 @@ inline void VulkanCore::createFramebuffers()
 	//初始化framebuffer的大小，一个framebuffer对应一个swapchain的imageview
 	SwapChainFramebuffers.resize(swapChainImageViews.size());
 	for (size_t i = 0; i < SwapChainFramebuffers.size(); i++) { //绑定对应的imageview和depthimageview的信息,以后可能会绑定更多的attachments
-		std::array<VkImageView, 2> attachments = {
+		std::array<VkImageView, 3> attachments = {
 			swapChainImageViews[i],
-			depthImageView
+			depthImageView,
+			swapChainImageViews[i]
 		};
 
 		VkFramebufferCreateInfo framebufferInfo{};
@@ -1607,8 +1606,7 @@ void VulkanCore::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32
 	beginInfo.flags = 0; // Optional
 	beginInfo.pInheritanceInfo = nullptr; // Optional
 
-	VK_CHECK(vkBeginCommandBuffer(commandBuffer, &beginInfo));
-
+	VK_CHECK(vkBeginCommandBuffer(commandBuffer, &beginInfo))
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass = renderPass;
@@ -1622,36 +1620,41 @@ void VulkanCore::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32
 
 	renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 	renderPassInfo.pClearValues = clearValues.data();
+
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+	{
+		//1.normal render pass
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-	VkBuffer vertexBuffers[] = { vertexBuffer };
-	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+		VkBuffer vertexBuffers[] = { vertexBuffer };
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-	vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = static_cast<float>(swapChainExtent.width);
+		viewport.height = static_cast<float>(swapChainExtent.height);
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
+		VkRect2D scissor{};
+		scissor.offset = { 0, 0 };
+		scissor.extent = swapChainExtent;
+		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	VkViewport viewport{};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = static_cast<float>(swapChainExtent.width);
-	viewport.height = static_cast<float>(swapChainExtent.height);
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
 
-	VkRect2D scissor{};
-	scissor.offset = { 0, 0 };
-	scissor.extent = swapChainExtent;
-	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
-
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-	m_GUIManager->EndFrame(commandBuffer);
+		//gui render pass
+		vkCmdNextSubpass(commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
+		m_GUIManager->EndFrame(commandBuffer);
+	}
 	vkCmdEndRenderPass(commandBuffer);
-	VK_CHECK(vkEndCommandBuffer(commandBuffer));
+	VK_CHECK(vkEndCommandBuffer(commandBuffer))
 }
 
 void VulkanCore::updateUniformBuffer(size_t currentImage)

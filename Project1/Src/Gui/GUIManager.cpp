@@ -52,6 +52,7 @@ void GUIManager::init(GLFWwindow* window, VkInstance instance, VulkanCore* vulka
     init_info.ImageCount = m_VulkanCore->getSwapChainImageCount();
     init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     init_info.RenderPass = m_VulkanCore->getRenderPass();
+    init_info.Subpass = 1;
 
     ImGui_ImplVulkan_Init(&init_info);
 
