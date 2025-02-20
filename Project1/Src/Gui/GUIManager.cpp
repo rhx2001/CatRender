@@ -65,6 +65,31 @@ void GUIManager::BeginFrame() {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+	ImGui::Begin("Camera");
+    Camera* camera = m_VulkanCore->camera;
+    static float fov = 60.0f;
+    static float znear = 0.1f, zfar = 256.0f;
+
+    ImGui::SliderFloat("FOV", &fov, 30.0f, 120.0f);
+    ImGui::InputFloat("Near Plane", &znear);
+    ImGui::InputFloat("Far Plane", &zfar);
+    if (ImGui::Button("Apply Perspective")) {
+        camera->setPerspective(fov, 16.0f/9.0f, znear, zfar); // aspectRatio 需从窗口获取
+    }
+
+    static glm::vec3 pos = camera->position;
+    ImGui::InputFloat3("Position", &pos.x);
+    if (ImGui::Button("Set Position")) {
+        camera->setPosition(pos);
+    }
+
+    static float rotationSpeed = 0.25f;
+    ImGui::SliderFloat("Rotation Speed", &rotationSpeed, 0.1f, 2.0f);
+    camera->setRotationSpeed(rotationSpeed);
+
+
+	ImGui::End();
+
 
 
     // 示例：绘制调试窗口

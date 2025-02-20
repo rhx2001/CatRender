@@ -12,6 +12,8 @@
 VulkanCore::VulkanCore()
 {
 	currentFrame = 0;
+	camera = new Camera();
+	
 }
 
 VulkanCore::~VulkanCore()
@@ -132,12 +134,16 @@ VulkanCore::~VulkanCore()
 		}
 	}
 
+	delete camera;
+	delete m_GUIManager;
+
 }
 
 void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 {
 	this->window = window;
 	this->m_GUIManager = m_GUIManager;
+	camera->initCamera();
 
 	createInstance();
 	setupDebugMessenger();
@@ -1575,6 +1581,9 @@ void VulkanCore::recreateSwapChain()
 	createImageViews();
 	createDepthResources();
 	createFramebuffers();
+
+	float aspect = static_cast<float>(width) / height;
+	camera->updateAspectRatio(aspect);
 }
 
 void VulkanCore::cleanupSwapChain()
@@ -1665,9 +1674,8 @@ void VulkanCore::updateUniformBuffer(size_t currentImage)
 	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 	UniformBufferObject ubo{};
 	ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / static_cast<float>(swapChainExtent.height), 0.1f, 10.0f);
-	ubo.proj[1][1] *= -1;
+	ubo.view = camera->matrices.view;
+	ubo.proj = camera->matrices.perspective;
 	memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
 }
 

@@ -16,6 +16,7 @@
 #include <fstream>
 #include <array>
 
+#include "Camera.hpp"
 
 
 #ifdef NDEBUG
@@ -154,6 +155,8 @@ public:
 
     std::vector<uint32_t> indices;
 
+    Camera* camera;
+
 public:
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
@@ -219,6 +222,8 @@ private:
     bool framebufferResized = false;
 
 	GUIManager* m_GUIManager = nullptr;
+
+
 
 private:
 	void createInstance();

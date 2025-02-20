@@ -29,6 +29,7 @@
     <ClInclude Include="Include\Gui\imstb_rectpack.h" />
     <ClInclude Include="Include\Gui\imstb_textedit.h" />
     <ClInclude Include="Include\Gui\imstb_truetype.h" />
+    <ClInclude Include="Include\Renderer\Camera.hpp" />
     <ClInclude Include="Include\Renderer\VulkanCore.h" />
     <ClInclude Include="Include\Window\window.h" />
   </ItemGroup>
@@ -43,6 +44,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Src\App\CatRender.cpp" />
     <ClCompile Include="Src\Gui\GUIManager.cpp" />
+    <ClCompile Include="Src\Renderer\Camera.cpp" />
     <ClCompile Include="Src\Renderer\VulkanCore.cpp" />
     <ClCompile Include="Src\Window\Window.cpp" />
   </ItemGroup>
