@@ -72,6 +72,8 @@ public:
 
 	VkInstance getInstance() const { return instance; }
 
+    float getAspectRatio();
+
 public:
 
     struct QueueFamilyIndices {

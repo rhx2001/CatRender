@@ -61,7 +61,7 @@ public:
 	void initCamera();
 
 	enum CameraType { lookat, firstperson };
-	CameraType type = CameraType::lookat;
+	CameraType type = CameraType::firstperson;
 
 	glm::vec3 rotation = glm::vec3();
 	glm::vec3 position = glm::vec3();
@@ -195,6 +195,11 @@ public:
 		updateViewMatrix();
 	};
 
+	float getFov() const
+	{
+		return fov;
+	}
+
 	// Update camera passing separate axis data (gamepad)
 	// Returns true if view or position has been changed
 	bool updatePad(glm::vec2 axisLeft, glm::vec2 axisRight, float deltaTime)
@@ -258,5 +263,7 @@ public:
 
 		return retVal;
 	}
+
+
 
 };

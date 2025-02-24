@@ -31,6 +31,7 @@
     <ClInclude Include="Include\Gui\imstb_truetype.h" />
     <ClInclude Include="Include\Renderer\Camera.hpp" />
     <ClInclude Include="Include\Renderer\VulkanCore.h" />
+    <ClInclude Include="Include\ResourceManager\ModelInstance.h" />
     <ClInclude Include="Include\Window\window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -46,6 +47,8 @@
     <ClCompile Include="Src\Gui\GUIManager.cpp" />
     <ClCompile Include="Src\Renderer\Camera.cpp" />
     <ClCompile Include="Src\Renderer\VulkanCore.cpp" />
+    <ClCompile Include="Src\ResourceManager\ModelInstance.cpp" />
+    <ClCompile Include="Src\ResourceManager\ModelManager.cpp" />
     <ClCompile Include="Src\Window\Window.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

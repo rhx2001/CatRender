@@ -6,7 +6,7 @@
 #include <chrono>
 #include <unordered_map>
 #include <cstdlib>
-
+#include <glm/gtx/string_cast.hpp>
 #include "Gui/GUIManager.h"
 
 VulkanCore::VulkanCore()
@@ -144,6 +144,8 @@ void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 	this->window = window;
 	this->m_GUIManager = m_GUIManager;
 	camera->initCamera();
+	camera->setTranslation(glm::vec3(0.0f, 0, -5));
+	std::cout << "position: " << camera->position.x << camera->position.y << camera->position.z << "\n";
 
 	createInstance();
 	setupDebugMessenger();
@@ -247,6 +249,11 @@ void VulkanCore::drawFrame()
 	}
 
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
+float VulkanCore::getAspectRatio()
+{
+	return swapChainExtent.width / static_cast<float>(swapChainExtent.height);
 }
 
 inline void VulkanCore::createInstance()
@@ -660,8 +667,8 @@ inline void VulkanCore::createGraphicsPipeline_Rasterizer()
 	rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
 	//Rasterizer
 
-	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;//修改绘制顺序，变为顺时针，这样的话就不会被剔除掉了，因为前面的投影矩阵使用了z轴翻转
+	rasterizer.cullMode = VK_CULL_MODE_NONE;
+	//rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;//修改绘制顺序，变为顺时针，这样的话就不会被剔除掉了，因为前面的投影矩阵使用了z轴翻转
 
 	//Multisampling
 	VkPipelineMultisampleStateCreateInfo multisampling{};
@@ -1673,7 +1680,17 @@ void VulkanCore::updateUniformBuffer(size_t currentImage)
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 	UniformBufferObject ubo{};
-	ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+	static auto prevTime = std::chrono::high_resolution_clock::now();
+	float deltaTime = std::chrono::duration<float>(currentTime - prevTime).count();
+	prevTime = currentTime;
+
+	camera->update(deltaTime); // 先更新摄像头状态
+
+
+	ubo.model = glm::rotate(glm::mat4(1.0f),
+		glm::radians(90.0f), // Rotate 90 degrees per second
+		glm::vec3(0.0f, 0.0f, 1.0f));
 	ubo.view = camera->matrices.view;
 	ubo.proj = camera->matrices.perspective;
 	memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));

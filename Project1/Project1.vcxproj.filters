@@ -40,6 +40,12 @@
     <Filter Include="头文件\Renderer">
       <UniqueIdentifier>{de66e42d-aae9-4aaa-b1ce-9bca57216d7e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\ResourceManager">
+      <UniqueIdentifier>{c998babe-4904-4dac-b4be-af2223cec04b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\ResourceManager">
+      <UniqueIdentifier>{fed4d69f-bb88-4fb6-8e83-b086854a5220}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\App\CatRender.h">
@@ -81,6 +87,9 @@
     <ClInclude Include="Include\Renderer\Camera.hpp">
       <Filter>头文件\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Include\ResourceManager\ModelInstance.h">
+      <Filter>头文件\ResourceManager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\App\CatRender.cpp">
@@ -121,6 +130,12 @@
     </ClCompile>
     <ClCompile Include="Src\Renderer\Camera.cpp">
       <Filter>源文件\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\ModelManager.cpp">
+      <Filter>源文件\ResourceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\ModelInstance.cpp">
+      <Filter>源文件\ResourceManager</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

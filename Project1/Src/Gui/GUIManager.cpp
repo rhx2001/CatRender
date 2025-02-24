@@ -67,25 +67,28 @@ void GUIManager::BeginFrame() {
 
 	ImGui::Begin("Camera");
     Camera* camera = m_VulkanCore->camera;
-    static float fov = 60.0f;
-    static float znear = 0.1f, zfar = 256.0f;
+    static float fov = camera->getFov(); // 初始化为当前相机的FOV
+    // Near and Far Planes
+    static float znear = camera->getNearClip(); // 初始化为当前相机的近裁剪面
+    static float zfar = camera->getFarClip();   // 初始化为当前相机的远裁剪面
 
-    ImGui::SliderFloat("FOV", &fov, 30.0f, 120.0f);
-    ImGui::InputFloat("Near Plane", &znear);
-    ImGui::InputFloat("Far Plane", &zfar);
-    if (ImGui::Button("Apply Perspective")) {
-        camera->setPerspective(fov, 16.0f/9.0f, znear, zfar); // aspectRatio 需从窗口获取
+    if (ImGui::SliderFloat("FOV", &fov, 30.0f, 120.0f)|| ImGui::InputFloat("Near Plane", &znear)|| ImGui::InputFloat("Far Plane", &zfar)) {
+        // 获取当前窗口的宽高比
+        float aspectRatio = m_VulkanCore->getAspectRatio(); // 假设你有方法获取窗口宽高比
+        camera->setPerspective(fov, aspectRatio, znear, zfar);
     }
 
     static glm::vec3 pos = camera->position;
-    ImGui::InputFloat3("Position", &pos.x);
-    if (ImGui::Button("Set Position")) {
+    if (ImGui::DragFloat3("Position", &pos.x)) {
         camera->setPosition(pos);
     }
 
-    static float rotationSpeed = 0.25f;
-    ImGui::SliderFloat("Rotation Speed", &rotationSpeed, 0.1f, 2.0f);
-    camera->setRotationSpeed(rotationSpeed);
+    static glm::vec3 rotation = camera->rotation;
+    if (ImGui::DragFloat3("Rotation",&rotation.x,1.0f,-180.0f,180.0f))
+    {
+        camera->setRotation(rotation);
+    }
+  
 
 
 	ImGui::End();
@@ -138,5 +141,5 @@ void GUIManager::CreateDescriptorPool()
     pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
     pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
     pool_info.pPoolSizes = pool_sizes;
-    VK_CHECK(vkCreateDescriptorPool(m_VulkanCore->getDevice(), &pool_info, nullptr, &m_DescriptorPool));
+    VK_CHECK(vkCreateDescriptorPool(m_VulkanCore->getDevice(), &pool_info, nullptr, &m_DescriptorPool))
 }
