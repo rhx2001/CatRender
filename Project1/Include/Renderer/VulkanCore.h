@@ -9,6 +9,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtx/hash.hpp"
 #include "stb_image/stb_image.h"
+#include "ResourceManager/ModelInstance.h"
 #include <stdexcept>
 #include <iostream>
 #include <vector>
@@ -32,6 +33,8 @@ const std::string TEXTURE_PATH = "textures/viking_room.png";
 const std::string MODEL_PATH = "models/viking_room.obj";
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
+
+const size_t MAX_NUM_OBJECT = 100;
 
 static std::vector<char> readFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
@@ -211,6 +214,14 @@ private:
     std::vector<VkDeviceMemory> uniformBuffersMemory;
     std::vector<void*> uniformBuffersMapped;
 
+    std::vector<VkBuffer> dynamic_uniformBuffers;
+    std::vector<VkDeviceMemory> dynamic_uniformBuffersMemory;
+    std::vector<void*> dynamic_uniformBuffersMapped;
+    size_t dynamicAlignment;//Æ«ÒÆÁ¿
+
+    std::vector<modelInstance*> modelInstances;
+
+
     std::vector<VkDescriptorSet> descriptorSets;
 
     std::vector<VkCommandBuffer> commandBuffers;
@@ -246,7 +257,10 @@ private:
     void loadModel();
     void createVertexBuffer();
     void createIndexBuffer();
-    void createUniformBuffers();
+
+	void createUniformBuffers();
+    void createDynamicUniformBuffers();
+
     void createDescriptorPool();
     void createDescriptorSets();
     void createCommandBuffers();
@@ -334,6 +348,8 @@ private:
     void recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32_t& imageIndex);
 
     void updateUniformBuffer(size_t currentImage);
+
+    void updateUniformBuffer_dynamic(size_t currentImage) const;
 
 
 };

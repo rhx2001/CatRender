@@ -30,16 +30,6 @@ void CatRender::mainloop()
     {
         glfwPollEvents();
 
-        // GUI 新帧
-        m_GUIManager->BeginFrame();
-
-        ImGui::Begin("Control Panel");
-        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-        if (ImGui::Button("Rebuild Pipeline")) {
-            // 处理按钮点击
-        }
-        ImGui::End();
-
         // Vulkan 绘制
         Render->drawFrame();
     }

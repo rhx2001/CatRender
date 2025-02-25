@@ -164,10 +164,15 @@ void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 	createTextureImage();
 	createTextureImageView();
 	createTextureSampler();
+
+
+	createUniformBuffers();
+	createDynamicUniformBuffers();
+
 	loadModel();
 	createVertexBuffer();
 	createIndexBuffer();
-	createUniformBuffers();
+
 	createDescriptorPool();
 	createDescriptorSets();
 	createCommandBuffers();
@@ -584,14 +589,20 @@ inline void VulkanCore::createDescriptorSetLayout()
 	samplerLayoutBinding.pImmutableSamplers = nullptr;
 	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+	VkDescriptorSetLayoutBinding dynamic_uboLayoutBinding{};
+	dynamic_uboLayoutBinding.binding = 2;
+	dynamic_uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+	dynamic_uboLayoutBinding.descriptorCount = 1;
+	dynamic_uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
 	//将两个描述符集布局绑定到一个数组中。
-	std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
+	std::array<VkDescriptorSetLayoutBinding, 3> bindings = { uboLayoutBinding, samplerLayoutBinding, dynamic_uboLayoutBinding };
 	VkDescriptorSetLayoutCreateInfo layoutInfo{};
 	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 	layoutInfo.pBindings = bindings.data();
 
-	VK_CHECK(vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout));
+	VK_CHECK(vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout))
 }
 
 inline void VulkanCore::createGraphicsPipeline_Rasterizer()
@@ -715,7 +726,7 @@ inline void VulkanCore::createGraphicsPipeline_Rasterizer()
 	pipelineLayoutInfo.setLayoutCount = 1;
 	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
-	VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout));
+	VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout))
 
 	//depth stencil
 	VkPipelineDepthStencilStateCreateInfo depthStencil{};
@@ -748,7 +759,7 @@ inline void VulkanCore::createGraphicsPipeline_Rasterizer()
 	pipelineInfo.pDepthStencilState = &depthStencil;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-	VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline));
+	VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline))
 
 	vkDestroyShaderModule(device, fragShaderModule, nullptr);
 	vkDestroyShaderModule(device, vertShaderModule, nullptr);
@@ -954,22 +965,46 @@ inline void VulkanCore::createUniformBuffers()
 	}
 }
 
+inline void VulkanCore::createDynamicUniformBuffers()
+{
+	VkPhysicalDeviceProperties deviceProperties;
+	vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+	size_t minUboAlignment = deviceProperties.limits.minUniformBufferOffsetAlignment;//获取最小位移单位
+	dynamicAlignment = sizeof(UniformBufferObject);//获取uniformbuffer的大小
+	if (minUboAlignment > 0) {
+		dynamicAlignment = (dynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);//保证偏移量是2^n
+	}
+	size_t bufferSize = dynamicAlignment * MAX_NUM_OBJECT;
+
+	dynamic_uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+	dynamic_uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+	dynamic_uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, dynamic_uniformBuffers[i], dynamic_uniformBuffersMemory[i]);
+		vkMapMemory(device, dynamic_uniformBuffersMemory[i], 0, bufferSize, 0, &dynamic_uniformBuffersMapped[i]);
+	}
+}
+
+
 inline void VulkanCore::createDescriptorPool()
 {
-	std::array<VkDescriptorPoolSize, 2> poolSizes{};
+	std::array<VkDescriptorPoolSize, 3> poolSizes{};
 	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
 	poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+	poolSizes[2].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+	poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
 	VkDescriptorPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 	poolInfo.pPoolSizes = poolSizes.data();
-	poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
 	poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	VK_CHECK(vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool));
+	VK_CHECK(vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool))
 }
 
 void VulkanCore::createDescriptorSets()
@@ -983,7 +1018,7 @@ void VulkanCore::createDescriptorSets()
 	allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 	allocInfo.pSetLayouts = layouts.data();
 	descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-	VK_CHECK(vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()));
+	VK_CHECK(vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()))
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		VkDescriptorBufferInfo bufferInfo{};
@@ -996,7 +1031,7 @@ void VulkanCore::createDescriptorSets()
 		imageInfo.imageView = textureImageView;
 		imageInfo.sampler = textureSampler;
 
-		std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+		std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
 
 		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		descriptorWrites[0].dstSet = descriptorSets[i];
@@ -1013,6 +1048,20 @@ void VulkanCore::createDescriptorSets()
 		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		descriptorWrites[1].descriptorCount = 1;
 		descriptorWrites[1].pImageInfo = &imageInfo;
+
+
+		VkDescriptorBufferInfo dynamic_bufferInfo{};
+		dynamic_bufferInfo.buffer = dynamic_uniformBuffers[i];
+		dynamic_bufferInfo.offset = 0;
+		dynamic_bufferInfo.range = dynamicAlignment*MAX_NUM_OBJECT;
+
+		descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrites[2].dstSet = descriptorSets[i];
+		descriptorWrites[2].dstBinding = 2;
+		descriptorWrites[2].dstArrayElement = 0;
+		descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+		descriptorWrites[2].descriptorCount = 1;
+		descriptorWrites[2].pBufferInfo = &dynamic_bufferInfo;
 
 		vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 	}
@@ -1661,12 +1710,14 @@ void VulkanCore::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32
 		scissor.extent = swapChainExtent;
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 1, nullptr);
 
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
 		//gui render pass
 		vkCmdNextSubpass(commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
+		// GUI 新帧
+		m_GUIManager->BeginFrame();
 		m_GUIManager->EndFrame(commandBuffer);
 	}
 	vkCmdEndRenderPass(commandBuffer);
@@ -1694,6 +1745,32 @@ void VulkanCore::updateUniformBuffer(size_t currentImage)
 	ubo.view = camera->matrices.view;
 	ubo.proj = camera->matrices.perspective;
 	memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+}
+
+void VulkanCore::updateUniformBuffer_dynamic(size_t currentImage) const 
+{
+	static auto startTime = std::chrono::high_resolution_clock::now();
+
+	auto currentTime = std::chrono::high_resolution_clock::now();
+	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+
+	static auto prevTime = std::chrono::high_resolution_clock::now();
+	float deltaTime = std::chrono::duration<float>(currentTime - prevTime).count();
+	prevTime = currentTime;
+
+	camera->update(deltaTime); // 先更新摄像头状态
+
+	for (auto& modelInstance : modelInstances) {
+		UniformBufferObject ubo{};
+		ubo.model = glm::rotate(glm::mat4(1.0f),
+			glm::radians(90.0f), // Rotate 90 degrees per second
+			glm::vec3(0.0f, 0.0f, 1.0f));
+		ubo.view = camera->matrices.view;
+		ubo.proj = camera->matrices.perspective;
+		char* data = static_cast<char*>(dynamic_uniformBuffersMapped[currentImage]) + modelInstance->uniformOffset;
+		memcpy(data, &ubo, sizeof(ubo));
+	}
 }
 
 VkFormat VulkanCore::findDepthFormat() {

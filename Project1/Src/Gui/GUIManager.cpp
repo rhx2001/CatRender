@@ -65,6 +65,13 @@ void GUIManager::BeginFrame() {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+    ImGui::Begin("Control Panel");
+    ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+    if (ImGui::Button("Rebuild Pipeline")) {
+        // 处理按钮点击
+    }
+    ImGui::End();
+
 	ImGui::Begin("Camera");
     Camera* camera = m_VulkanCore->camera;
     static float fov = camera->getFov(); // 初始化为当前相机的FOV

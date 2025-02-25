@@ -48,8 +48,11 @@
     <ClCompile Include="Src\Renderer\Camera.cpp" />
     <ClCompile Include="Src\Renderer\VulkanCore.cpp" />
     <ClCompile Include="Src\ResourceManager\ModelInstance.cpp" />
-    <ClCompile Include="Src\ResourceManager\ModelManager.cpp" />
     <ClCompile Include="Src\Window\Window.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\Shader.frag" />
+    <None Include="shaders\Shader.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

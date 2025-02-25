@@ -46,6 +46,9 @@
     <Filter Include="源文件\ResourceManager">
       <UniqueIdentifier>{fed4d69f-bb88-4fb6-8e83-b086854a5220}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\shader">
+      <UniqueIdentifier>{5ebe1588-4bb9-4d84-9a2f-657335269a45}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\App\CatRender.h">
@@ -131,11 +134,16 @@
     <ClCompile Include="Src\Renderer\Camera.cpp">
       <Filter>源文件\Render</Filter>
     </ClCompile>
-    <ClCompile Include="Src\ResourceManager\ModelManager.cpp">
-      <Filter>源文件\ResourceManager</Filter>
-    </ClCompile>
     <ClCompile Include="Src\ResourceManager\ModelInstance.cpp">
       <Filter>源文件\ResourceManager</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\Shader.frag">
+      <Filter>源文件\shader</Filter>
+    </None>
+    <None Include="shaders\Shader.vert">
+      <Filter>源文件\shader</Filter>
+    </None>
   </ItemGroup>
 </Project>
