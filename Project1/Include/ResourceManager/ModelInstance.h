@@ -1,11 +1,12 @@
 #pragma once
 #include <glm/glm.hpp>
-#include <glm/matrix.hpp>
 #include <string>
 class modelInstance
 {
 public:
-	modelInstance(glm::vec3 position, std::string name, uint32_t uniformOffset);
+	modelInstance();
+	modelInstance(glm::mat4 model, std::string name, uint32_t uniformOffset)
+		: transM(model), name(name), uniformOffset(uniformOffset) {};
 	~modelInstance();
 	void updateUniforms();
 

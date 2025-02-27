@@ -1,7 +1,7 @@
 ﻿#define STB_IMAGE_IMPLEMENTATION
 #define TINYOBJLOADER_IMPLEMENTATION
 #include"Renderer/VulkanCore.h"
-#include "tinyobjloader/tiny_obj_loader.h"
+
 #include <set>
 #include <chrono>
 #include <unordered_map>
@@ -116,6 +116,10 @@ VulkanCore::~VulkanCore()
 		vkDestroyBuffer(device, uniformBuffers[i], nullptr);
 		vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
 	}
+	for (size_t i = 0; i < dynamic_uniformBuffers.size(); i++) {
+		vkDestroyBuffer(device, dynamic_uniformBuffers[i], nullptr);
+		vkFreeMemory(device, dynamic_uniformBuffersMemory[i], nullptr);
+	}
 
 	// 9. 销毁逻辑设备
 	if (device != VK_NULL_HANDLE) {
@@ -165,13 +169,15 @@ void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 	createTextureImageView();
 	createTextureSampler();
 
-
-	createUniformBuffers();
-	createDynamicUniformBuffers();
-
 	loadModel();
 	createVertexBuffer();
 	createIndexBuffer();
+
+	createUniformBuffers();
+	createDynamicUniformBuffers();
+	
+	createModelInstance();
+
 
 	createDescriptorPool();
 	createDescriptorSets();
@@ -210,6 +216,8 @@ void VulkanCore::drawFrame()
 
 	//update uniformbuffer
 	updateUniformBuffer(currentFrame);
+
+	updateUniformBuffer_dynamic(currentFrame);
 	//update uniformbuffer
 
 	//Submitting the command buffer
@@ -863,7 +871,7 @@ inline void VulkanCore::createTextureSampler()
 	vkGetPhysicalDeviceProperties(physicalDevice, &properties);//根据设备来设置采样器的一些数值
 	samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
 
-	VK_CHECK(vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler));
+	VK_CHECK(vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler))
 }
 
 inline void VulkanCore::loadModel()
@@ -901,6 +909,8 @@ inline void VulkanCore::loadModel()
 			indices.push_back(uniqueVertices[vertex]);
 		}
 	}
+
+
 }
 
 inline void VulkanCore::createVertexBuffer()
@@ -985,6 +995,20 @@ inline void VulkanCore::createDynamicUniformBuffers()
 	}
 }
 
+inline void VulkanCore::createModelInstance()
+{
+
+	for (size_t i = 0; i < 20; i++) {
+		modelInstances.push_back(
+			new modelInstance(
+				glm::translate(glm::mat4(1.0f), glm::vec3(static_cast<float>(i)/2.0f, glm::cos(i), 0.0f)),
+				"model" + std::to_string(i),
+				dynamicAlignment * static_cast<uint32_t>(i)
+			)
+		);
+		std::cout << "offset" << dynamicAlignment * static_cast<uint32_t>(i)<<" "<< modelInstances.size() << "\n";
+	}
+}
 
 inline void VulkanCore::createDescriptorPool()
 {
@@ -1053,8 +1077,7 @@ void VulkanCore::createDescriptorSets()
 		VkDescriptorBufferInfo dynamic_bufferInfo{};
 		dynamic_bufferInfo.buffer = dynamic_uniformBuffers[i];
 		dynamic_bufferInfo.offset = 0;
-		dynamic_bufferInfo.range = dynamicAlignment*MAX_NUM_OBJECT;
-
+		dynamic_bufferInfo.range = dynamicAlignment;//是单段大小
 		descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		descriptorWrites[2].dstSet = descriptorSets[i];
 		descriptorWrites[2].dstBinding = 2;
@@ -1461,7 +1484,7 @@ void VulkanCore::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMem
 	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE; //缓冲区的共享模式(独占模式)
 
 	//调用 Vulkan API 创建缓冲区
-	VK_CHECK(vkCreateBuffer(device, &bufferInfo, nullptr, &buffer));
+	VK_CHECK(vkCreateBuffer(device, &bufferInfo, nullptr, &buffer))
 
 	//2.查询缓冲区的内存需求
 	VkMemoryRequirements memRequirements;
@@ -1474,7 +1497,7 @@ void VulkanCore::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMem
 	allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties); // 找到合适的内存类型索引
 
 	//调用 Vulkan API 分配内存
-	VK_CHECK(vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory));
+	VK_CHECK(vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory))
 
 	//4. 将内存绑定到缓冲区
 	vkBindBufferMemory(device, buffer, bufferMemory, 0); //将分配的内存绑定到缓冲区对象
@@ -1710,9 +1733,14 @@ void VulkanCore::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32
 		scissor.extent = swapChainExtent;
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 1, nullptr);
 
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
+		for (auto& modelInstace : modelInstances) {
+			std::vector<uint32_t> dynamic_uniformOffset = { modelInstace->uniformOffset };
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 1, dynamic_uniformOffset.data());
+
+			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+		}
 
 		//gui render pass
 		vkCmdNextSubpass(commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
@@ -1738,10 +1766,6 @@ void VulkanCore::updateUniformBuffer(size_t currentImage)
 
 	camera->update(deltaTime); // 先更新摄像头状态
 
-
-	ubo.model = glm::rotate(glm::mat4(1.0f),
-		glm::radians(90.0f), // Rotate 90 degrees per second
-		glm::vec3(0.0f, 0.0f, 1.0f));
 	ubo.view = camera->matrices.view;
 	ubo.proj = camera->matrices.perspective;
 	memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
@@ -1760,16 +1784,18 @@ void VulkanCore::updateUniformBuffer_dynamic(size_t currentImage) const
 	prevTime = currentTime;
 
 	camera->update(deltaTime); // 先更新摄像头状态
+	float num = 10.0f;
 
 	for (auto& modelInstance : modelInstances) {
-		UniformBufferObject ubo{};
-		ubo.model = glm::rotate(glm::mat4(1.0f),
-			glm::radians(90.0f), // Rotate 90 degrees per second
-			glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo.view = camera->matrices.view;
-		ubo.proj = camera->matrices.perspective;
+
+		dynamic_UniformBufferObject ubo{};
+		//ubo.model = modelInstance->transM;
+		modelInstance->transM = glm::translate(glm::mat4(1.0f), glm::vec3(static_cast<float>(sin(num)), glm::cos(num), 0.0f));
+		ubo.model = modelInstance->transM;
+
 		char* data = static_cast<char*>(dynamic_uniformBuffersMapped[currentImage]) + modelInstance->uniformOffset;
 		memcpy(data, &ubo, sizeof(ubo));
+		num += time;
 	}
 }
 

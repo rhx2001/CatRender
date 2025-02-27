@@ -149,11 +149,13 @@ public:
     };
 
     struct UniformBufferObject {
-        glm::mat4 model;
         glm::mat4 view;
         glm::mat4 proj;
     };
 
+    struct dynamic_UniformBufferObject {
+        glm::mat4 model;
+    };
 
 public:
     std::vector<Vertex> vertices;
@@ -260,6 +262,7 @@ private:
 
 	void createUniformBuffers();
     void createDynamicUniformBuffers();
+    void createModelInstance();
 
     void createDescriptorPool();
     void createDescriptorSets();
@@ -354,12 +357,3 @@ private:
 
 };
 
-namespace std {
-    template<> struct hash<VulkanCore::Vertex> {
-        size_t operator()(VulkanCore::Vertex const& vertex) const {
-            return ((hash<glm::vec3>()(vertex.pos) ^
-                (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
-                (hash<glm::vec2>()(vertex.texCoord) << 1);
-        }
-    };
-}
