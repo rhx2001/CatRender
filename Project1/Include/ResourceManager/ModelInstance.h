@@ -1,6 +1,9 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <string>
+#include <unordered_map>
+#include <ResourceManager/Mesh.h>
+
 class modelInstance
 {
 public:
@@ -16,7 +19,7 @@ public:
 	uint32_t uniformOffset;  // 在Uniform Buffer中的偏移量
 
 private:
-
+	uint32_t meshBindID;
 	
 
 };

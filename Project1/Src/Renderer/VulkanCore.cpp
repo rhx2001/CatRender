@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <glm/gtx/string_cast.hpp>
 #include "Gui/GUIManager.h"
+#include <array>
 
 VulkanCore::VulkanCore()
 {
@@ -269,7 +270,7 @@ float VulkanCore::getAspectRatio()
 	return swapChainExtent.width / static_cast<float>(swapChainExtent.height);
 }
 
-inline void VulkanCore::createInstance()
+ void VulkanCore::createInstance()
 {
 	if (enableValidationLayers && !checkValidationLayerSupport()) {
 		throw std::runtime_error("validation layers requested, but not available!");
@@ -324,12 +325,12 @@ inline void VulkanCore::createInstance()
 	}
 }
 
-inline void VulkanCore::createSurface(GLFWwindow* window)
+ void VulkanCore::createSurface(GLFWwindow* window)
 {
 	VK_CHECK(glfwCreateWindowSurface(instance, window, nullptr, &surface));//创建一个窗口表面
 }
 
-inline void VulkanCore::pickPhysicalDevice()
+ void VulkanCore::pickPhysicalDevice()
 {
 	uint32_t physicalDeciveNum = 0;
 	vkEnumeratePhysicalDevices(instance, &physicalDeciveNum, NULL);
@@ -348,7 +349,7 @@ inline void VulkanCore::pickPhysicalDevice()
 
 }
 
-inline void VulkanCore::createLogicalDevice()
+ void VulkanCore::createLogicalDevice()
 {
 	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);//首先要遍历选择好的物理设备的队列族，来创建对应的逻辑设备
 	VkDeviceQueueCreateInfo queueCreateInfo{};
@@ -397,7 +398,7 @@ inline void VulkanCore::createLogicalDevice()
 
 }
 
-inline void VulkanCore::createSwapChain()
+ void VulkanCore::createSwapChain()
 {
 	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);//首先查询交换链的支持情况
 	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);//选择交换链的表面格式
@@ -448,7 +449,7 @@ inline void VulkanCore::createSwapChain()
 	swapChainExtent = extent;
 }
 
-inline void VulkanCore::createImageViews()
+ void VulkanCore::createImageViews()
 {
 	//创建完swapchain之后，我们需要创建对应的imageview。因为swapchin中的图像不能直接用来渲染，需要创建对应的imageview
 	swapChainImageViews.resize(swapChainImages.size());
@@ -458,7 +459,7 @@ inline void VulkanCore::createImageViews()
 	}
 }
 
-inline void VulkanCore::createRenderPass()
+ void VulkanCore::createRenderPass()
 {
 
 	std::vector<VkAttachmentDescription> attachments = {};
@@ -580,7 +581,7 @@ inline void VulkanCore::createRenderPass()
 	VK_CHECK(vkCreateRenderPass(device, &renderPassInfo, NULL, &renderPass))
 }
 
-inline void VulkanCore::createDescriptorSetLayout()
+ void VulkanCore::createDescriptorSetLayout()
 {
 	//创建一个描述符集布局。
 	VkDescriptorSetLayoutBinding uboLayoutBinding{};
@@ -613,7 +614,7 @@ inline void VulkanCore::createDescriptorSetLayout()
 	VK_CHECK(vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout))
 }
 
-inline void VulkanCore::createGraphicsPipeline_Rasterizer()
+ void VulkanCore::createGraphicsPipeline_Rasterizer()
 {
 
 	//load shader module
@@ -773,7 +774,7 @@ inline void VulkanCore::createGraphicsPipeline_Rasterizer()
 	vkDestroyShaderModule(device, vertShaderModule, nullptr);
 }
 
-inline void VulkanCore::createCommandPool()
+ void VulkanCore::createCommandPool()
 {
 	QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
 
@@ -785,7 +786,7 @@ inline void VulkanCore::createCommandPool()
 	VK_CHECK(vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool));
 }
 
-inline void VulkanCore::createFramebuffers()
+ void VulkanCore::createFramebuffers()
 {
 	//初始化framebuffer的大小，一个framebuffer对应一个swapchain的imageview
 	SwapChainFramebuffers.resize(swapChainImageViews.size());
@@ -809,7 +810,7 @@ inline void VulkanCore::createFramebuffers()
 	}
 }
 
-inline void VulkanCore::createTextureImage()
+ void VulkanCore::createTextureImage()
 {
 	int texWidth, texHeight, texChannels;//纹理图片的信息读取
 	stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -844,12 +845,12 @@ inline void VulkanCore::createTextureImage()
 	vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
-inline void VulkanCore::createTextureImageView()
+ void VulkanCore::createTextureImageView()
 {
 	textureImageView = createImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, mipLevels);
 }
 
-inline void VulkanCore::createTextureSampler()
+ void VulkanCore::createTextureSampler()
 {
 	VkSamplerCreateInfo samplerInfo{};
 	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -874,7 +875,7 @@ inline void VulkanCore::createTextureSampler()
 	VK_CHECK(vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler))
 }
 
-inline void VulkanCore::loadModel()
+ void VulkanCore::loadModel()
 {
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
@@ -913,7 +914,7 @@ inline void VulkanCore::loadModel()
 
 }
 
-inline void VulkanCore::createVertexBuffer()
+ void VulkanCore::createVertexBuffer()
 {
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
@@ -939,7 +940,7 @@ inline void VulkanCore::createVertexBuffer()
 
 }
 
-inline void VulkanCore::createIndexBuffer()
+ void VulkanCore::createIndexBuffer()
 {
 	//同vertexbuffer
 	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
@@ -961,7 +962,7 @@ inline void VulkanCore::createIndexBuffer()
 	vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
-inline void VulkanCore::createUniformBuffers()
+ void VulkanCore::createUniformBuffers()
 {
 	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
@@ -975,7 +976,7 @@ inline void VulkanCore::createUniformBuffers()
 	}
 }
 
-inline void VulkanCore::createDynamicUniformBuffers()
+ void VulkanCore::createDynamicUniformBuffers()
 {
 	VkPhysicalDeviceProperties deviceProperties;
 	vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
@@ -995,7 +996,7 @@ inline void VulkanCore::createDynamicUniformBuffers()
 	}
 }
 
-inline void VulkanCore::createModelInstance()
+ void VulkanCore::createModelInstance()
 {
 
 	for (size_t i = 0; i < 20; i++) {
@@ -1010,7 +1011,7 @@ inline void VulkanCore::createModelInstance()
 	}
 }
 
-inline void VulkanCore::createDescriptorPool()
+ void VulkanCore::createDescriptorPool()
 {
 	std::array<VkDescriptorPoolSize, 3> poolSizes{};
 	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -1126,7 +1127,7 @@ void VulkanCore::createSyncObjects()
 	}
 }
 
-inline void VulkanCore::createDepthResources()
+ void VulkanCore::createDepthResources()
 {
 	VkFormat depthFormat = findDepthFormat();
 	createImage(swapChainExtent.width, swapChainExtent.height, 1, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
@@ -1137,7 +1138,7 @@ inline void VulkanCore::createDepthResources()
 
 //-------------------下面的函数是用于填充信息以及验证需求的函数------------------------------------------
 
-inline std::vector<const char*> VulkanCore::getRequiredExtensions()
+ std::vector<const char*> VulkanCore::getRequiredExtensions()
 {
 	uint32_t glfwExtensionCount = 0;
 	const char** glfwExtensions;
@@ -1152,7 +1153,7 @@ inline std::vector<const char*> VulkanCore::getRequiredExtensions()
 	return extensions;
 }
 
-inline bool VulkanCore::checkValidationLayerSupport()
+ bool VulkanCore::checkValidationLayerSupport()
 {
 	uint32_t layerCount;
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -1178,7 +1179,7 @@ inline bool VulkanCore::checkValidationLayerSupport()
 	return true;
 }
 
-inline void VulkanCore::setupDebugMessenger() {
+ void VulkanCore::setupDebugMessenger() {
     if (!enableValidationLayers) return;
 
     VkDebugUtilsMessengerCreateInfoEXT createInfo{};
@@ -1191,12 +1192,12 @@ inline void VulkanCore::setupDebugMessenger() {
     }
 }
 
-inline bool VulkanCore::isDeviceSuitable(VkPhysicalDevice device)
+ bool VulkanCore::isDeviceSuitable(VkPhysicalDevice device)
 {
 	return true;
 }
 
-inline VulkanCore::QueueFamilyIndices VulkanCore::findQueueFamilies(VkPhysicalDevice device)
+ VulkanCore::QueueFamilyIndices VulkanCore::findQueueFamilies(VkPhysicalDevice device)
 {
 	VulkanCore::QueueFamilyIndices indices;
 	uint32_t queueFamilyCount = 0;
@@ -1227,7 +1228,7 @@ inline VulkanCore::QueueFamilyIndices VulkanCore::findQueueFamilies(VkPhysicalDe
 	return indices;
 }
 
-inline VulkanCore::SwapChainSupportDetails VulkanCore::querySwapChainSupport(VkPhysicalDevice const device) const {
+ VulkanCore::SwapChainSupportDetails VulkanCore::querySwapChainSupport(VkPhysicalDevice const device) const {
 	SwapChainSupportDetails details;
 
 	//首先查询交换链的表面能力
@@ -1253,7 +1254,7 @@ inline VulkanCore::SwapChainSupportDetails VulkanCore::querySwapChainSupport(VkP
 
 }
 
-inline VkSurfaceFormatKHR VulkanCore::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
+ VkSurfaceFormatKHR VulkanCore::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
 	for (const auto& availableFormat : availableFormats) {
 		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
 			return availableFormat;
@@ -1262,7 +1263,7 @@ inline VkSurfaceFormatKHR VulkanCore::chooseSwapSurfaceFormat(const std::vector<
 	return availableFormats[0];
 }
 
-inline VkPresentModeKHR VulkanCore::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
+ VkPresentModeKHR VulkanCore::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
 	for (const auto& availablePresentMode : availablePresentModes) {
 		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
 			return availablePresentMode;
@@ -1271,7 +1272,7 @@ inline VkPresentModeKHR VulkanCore::chooseSwapPresentMode(const std::vector<VkPr
 	return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-inline VkExtent2D VulkanCore::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
+ VkExtent2D VulkanCore::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
 	if (capabilities.currentExtent.width != UINT32_MAX) { //如果当前的范围是无效的，就返回当前的范围
 		return capabilities.currentExtent;
 	}
@@ -1288,7 +1289,7 @@ inline VkExtent2D VulkanCore::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& c
 	}
 }
 
-inline VkImageView VulkanCore::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels) const
+ VkImageView VulkanCore::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels) const
 {
 	VkImageViewCreateInfo viewInfo{};
 	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -1307,7 +1308,7 @@ inline VkImageView VulkanCore::createImageView(VkImage image, VkFormat format, V
 	return imageView;
 }
 
-inline VkShaderModule VulkanCore::createShaderModule(const std::vector<char>& code) const
+ VkShaderModule VulkanCore::createShaderModule(const std::vector<char>& code) const
 {
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
