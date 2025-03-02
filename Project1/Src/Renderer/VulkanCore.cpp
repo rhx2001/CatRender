@@ -320,9 +320,7 @@ float VulkanCore::getAspectRatio()
 		CreateInfo.pNext = nullptr;
 	}
 
-	if (vkCreateInstance(&CreateInfo, nullptr, &instance) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create instance!");
-	}
+	VK_CHECK(vkCreateInstance(&CreateInfo, nullptr, &instance))
 }
 
  void VulkanCore::createSurface(GLFWwindow* window)
