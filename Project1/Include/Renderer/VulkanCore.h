@@ -17,6 +17,8 @@
 #include <fstream>
 
 #include "Camera.hpp"
+#include "ResourceManager/BufferManager.h"
+#include "ResourceManager/ModelManager.h"
 
 
 #ifdef NDEBUG
@@ -29,7 +31,11 @@ const bool enableValidationLayers = true;
 #define VK_CHECK(f) { VkResult res = (f); if (res != VK_SUCCESS) { std::cerr << "Fatal: VkResult is \"" << res << "\" in " << __FILE__ << " at line " << __LINE__ << std::endl; abort(); } }
 
 const std::string TEXTURE_PATH = "textures/viking_room.png";
+
 const std::string MODEL_PATH = "models/viking_room.obj";
+std::vector<std::string> paths{MODEL_PATH};
+
+
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -192,6 +198,9 @@ private:
 
 	GUIManager* m_GUIManager = nullptr;
 
+    std::unique_ptr<ModelManager> modelManager;
+
+    std::unique_ptr<BufferManager> bufferManager;
 
 
 private:

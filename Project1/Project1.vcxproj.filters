@@ -99,6 +99,9 @@
     <ClInclude Include="Include\ResourceManager\Mesh.h">
       <Filter>头文件\ResourceManager</Filter>
     </ClInclude>
+    <ClInclude Include="Include\ResourceManager\BufferManager.h">
+      <Filter>头文件\ResourceManager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\App\CatRender.cpp">
@@ -144,6 +147,12 @@
       <Filter>源文件\ResourceManager</Filter>
     </ClCompile>
     <ClCompile Include="Include\ResourceManager\Mesh.cpp">
+      <Filter>源文件\ResourceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Include\ResourceManager\ModelManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\BufferManager.cpp">
       <Filter>源文件\ResourceManager</Filter>
     </ClCompile>
   </ItemGroup>

@@ -52,6 +52,17 @@ void Mesh::setBufferIds(uint32_t vbId, uint32_t ibId)
 	ibId = indexBufferId;
 }
 
+void Mesh::setVertexBufferId(uint32_t vbId)
+{
+	vbId = vertexBufferId;
+}
+
+void Mesh::setIndexBufferId(uint32_t ibId)
+{
+	ibId = indexBufferId;
+}
+
+
 VkVertexInputBindingDescription Mesh::getBindingDescription()
 {
 	VkVertexInputBindingDescription bindingDescription{};

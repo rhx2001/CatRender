@@ -22,6 +22,8 @@ public:
 
     };
 
+
+
 private:
 
     std::vector<Vertex> vertices{};
@@ -34,13 +36,17 @@ private:
 
 public:
 
-	Mesh(std::string const& path, std::string const& name):path(path), name(name){};
+	Mesh(std::string const& path, std::string const& name):path(path), name(name){}
 
 	~Mesh();
 
 	void loadMesh(const std::string& path);
 
     void setBufferIds(uint32_t vbId, uint32_t ibId);
+
+    void setVertexBufferId(uint32_t vbId);
+
+    void setIndexBufferId(uint32_t ibId);
 
     const std::vector<Vertex>& getVertices() const { return vertices; }
 

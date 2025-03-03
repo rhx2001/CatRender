@@ -14,7 +14,7 @@ VulkanCore::VulkanCore()
 {
 	currentFrame = 0;
 	camera = new Camera();
-	
+	modelManager = std::make_unique<ModelManager>();
 }
 
 VulkanCore::~VulkanCore()
@@ -148,9 +148,10 @@ void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 {
 	this->window = window;
 	this->m_GUIManager = m_GUIManager;
+	
 	camera->initCamera();
 	camera->setTranslation(glm::vec3(0.0f, 0, -5));
-	std::cout << "position: " << camera->position.x << camera->position.y << camera->position.z << "\n";
+	
 
 	createInstance();
 	setupDebugMessenger();
@@ -388,8 +389,10 @@ float VulkanCore::getAspectRatio()
 		createInfo.enabledLayerCount = 0;
 	}
 
-	VK_CHECK(vkCreateDevice(physicalDevice, &createInfo, nullptr, &device));//这里创建逻辑设备，如果失败则抛出异常
+	VK_CHECK(vkCreateDevice(physicalDevice, &createInfo, nullptr, &device))//这里创建逻辑设备，如果失败则抛出异常
 
+
+	bufferManager = std::make_unique<BufferManager>(device, physicalDevice);//在创建完设备之后就可以绑定buffermanager了。
 	vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);//获取逻辑设备中对应的队列族，存住在graphicsQueue中
 	vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);//同上
 
@@ -875,89 +878,57 @@ float VulkanCore::getAspectRatio()
 
  void VulkanCore::loadModel()
 {
-	tinyobj::attrib_t attrib;
-	std::vector<tinyobj::shape_t> shapes;
-	std::vector<tinyobj::material_t> materials;
-	std::string err;
-
-	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, MODEL_PATH.c_str())) {
-		throw std::runtime_error(err);
-	}
-	std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-	for (const auto& shape : shapes) {
-		for (const auto& index : shape.mesh.indices) {
-			Vertex vertex{};
-
-			vertex.pos = {
-				attrib.vertices[3 * index.vertex_index + 0], //要拆解读取模型数据
-				attrib.vertices[3 * index.vertex_index + 1],
-				attrib.vertices[3 * index.vertex_index + 2]
-			};
-
-			vertex.texCoord = {
-				attrib.texcoords[2 * index.texcoord_index + 0],
-				1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
-			};
-
-			vertex.color = { 1.0f, 1.0f, 1.0f };
-
-			if (uniqueVertices.count(vertex) == 0) {
-				uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
-				vertices.push_back(vertex);
-			}
-			indices.push_back(uniqueVertices[vertex]);
-		}
-	}
-
+	 modelManager->LoadMeshs(paths);
 
 }
 
  void VulkanCore::createVertexBuffer()
 {
-	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
-	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-	//VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT表示这个buffer的数据可以被cpu读取
 
-	//将数据拷贝到buffer中
-	void* data;
-	vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-	memcpy(data, vertices.data(), (size_t)bufferSize);
-	vkUnmapMemory(device, stagingBufferMemory);
+	//VkBuffer stagingBuffer;
+	//VkDeviceMemory stagingBufferMemory;
+	//VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+	//createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+	//	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+	////VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT表示这个buffer的数据可以被cpu读取
 
-	//创建一个device local的buffer，只有gpu能访问到
-	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
-	
-	copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+	////将数据拷贝到buffer中
+	//void* data;
+	//vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+	//memcpy(data, vertices.data(), (size_t)bufferSize);
+	//vkUnmapMemory(device, stagingBufferMemory);
 
-	//写入完毕，删除stagingBuffer
-	vkDestroyBuffer(device, stagingBuffer, nullptr);
-	vkFreeMemory(device, stagingBufferMemory, nullptr);
+	////创建一个device local的buffer，只有gpu能访问到
+	//createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
+	//
+	//copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+
+	////写入完毕，删除stagingBuffer
+	//vkDestroyBuffer(device, stagingBuffer, nullptr);
+	//vkFreeMemory(device, stagingBufferMemory, nullptr);
 
 }
 
  void VulkanCore::createIndexBuffer()
 {
-	//同vertexbuffer
-	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
-	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
-	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-	void* data;
-	vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-	memcpy(data, indices.data(), (size_t)bufferSize);
-	vkUnmapMemory(device, stagingBufferMemory);
+	////同vertexbuffer
+	//VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+	//VkBuffer stagingBuffer;
+	//VkDeviceMemory stagingBufferMemory;
+	//createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+	//	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+	//void* data;
+	//vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+	//memcpy(data, indices.data(), (size_t)bufferSize);
+	//vkUnmapMemory(device, stagingBufferMemory);
 
-	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
+	//createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
+	//	VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
 
-	copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+	//copyBuffer(stagingBuffer, indexBuffer, bufferSize);
 
-	vkDestroyBuffer(device, stagingBuffer, nullptr);
-	vkFreeMemory(device, stagingBufferMemory, nullptr);
+	//vkDestroyBuffer(device, stagingBuffer, nullptr);
+	//vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
  void VulkanCore::createUniformBuffers()
