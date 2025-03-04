@@ -1,6 +1,7 @@
+
 #include <stdexcept>
 #include <ResourceManager/Mesh.h>
-#include "glm/gtx/hash.hpp"
+
 #include "tinyobjloader/tiny_obj_loader.h"
 
 
@@ -96,12 +97,3 @@ std::array<VkVertexInputAttributeDescription, 3> Mesh::getAttributeDescriptions(
 }
 
 
-namespace std {
-	template<> struct hash<Mesh::Vertex> {
-		size_t operator()(Mesh::Vertex const& vertex) const {
-			return ((hash<glm::vec3>()(vertex.pos) ^
-				(hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
-				(hash<glm::vec2>()(vertex.texCoord) << 1);
-		}
-	};
-}

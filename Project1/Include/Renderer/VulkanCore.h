@@ -33,7 +33,8 @@ const bool enableValidationLayers = true;
 const std::string TEXTURE_PATH = "textures/viking_room.png";
 
 const std::string MODEL_PATH = "models/viking_room.obj";
-std::vector<std::string> paths{MODEL_PATH};
+const std::string MODEL_PATH2 = "models/african_head.obj";
+std::vector<std::string> PATHS{MODEL_PATH, MODEL_PATH2};
 
 
 
@@ -106,9 +107,6 @@ public:
         std::vector<VkSurfaceFormatKHR> formats;
         std::vector<VkPresentModeKHR> presentModes;
     };
-
-
-
 
 
     struct UniformBufferObject {

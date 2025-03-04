@@ -1,3 +1,6 @@
+/*
+ * 这是buffermanager，用于管理各种buffer的创建和删除，目前就只做了vertexbuffer以及indexbuffer
+ */
 #pragma once
 #include <unordered_map>
 #include <vulkan/vulkan_core.h>
@@ -16,7 +19,7 @@ struct BufferInfo
 class BufferManager
 {
 public:
-
+	
 private:
 	VkDevice device_;
 	VkPhysicalDevice physicalDevice_;
@@ -35,8 +38,8 @@ public:
 
 	BufferInfo getBuffer(uint32_t const id) const {return bufferMap.at(id);}
 
-	void createVertexBuffer(Mesh*& mesh);
+	void createVertexBuffer(Mesh* mesh);
 
-	void createIndexBuffer(Mesh*& mesh);
+	void createIndexBuffer(Mesh* mesh);
 
 };

@@ -1,5 +1,4 @@
 ﻿#define STB_IMAGE_IMPLEMENTATION
-#define TINYOBJLOADER_IMPLEMENTATION
 #include"Renderer/VulkanCore.h"
 
 #include <set>
@@ -641,8 +640,8 @@ float VulkanCore::getAspectRatio()
 	//vertex input
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	auto bindingDescription = Vertex::getBindingDescription();
-	auto attributeDescriptions = Vertex::getAttributeDescriptions();
+	auto bindingDescription = Mesh::getBindingDescription();
+	auto attributeDescriptions = Mesh::getAttributeDescriptions();
 
 	vertexInputInfo.vertexBindingDescriptionCount = 1;
 	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -878,13 +877,24 @@ float VulkanCore::getAspectRatio()
 
  void VulkanCore::loadModel()
 {
-	 modelManager->LoadMeshs(paths);
+	 modelManager->LoadMeshs(PATHS);
+	for (int i=0;i<5;i++)
+	{
+		modelManager->createModelInstance(0);
+	}
+	for (int i = 0; i < 5; i++)
+	{
+		modelManager->createModelInstance(1);
+	}
 
 }
 
  void VulkanCore::createVertexBuffer()
 {
-
+	 for (auto& [id, mesh] : *modelManager->getMeshs())
+	 {
+		 bufferManager->createVertexBuffer(mesh.get());
+	 }
 	//VkBuffer stagingBuffer;
 	//VkDeviceMemory stagingBufferMemory;
 	//VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
@@ -911,6 +921,10 @@ float VulkanCore::getAspectRatio()
 
  void VulkanCore::createIndexBuffer()
 {
+	 for (auto& [id, mesh] : *modelManager->getMeshs())
+	 {
+		 bufferManager->createIndexBuffer(mesh.get());
+	 }
 	////同vertexbuffer
 	//VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 	//VkBuffer stagingBuffer;
@@ -1684,11 +1698,6 @@ void VulkanCore::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32
 		//1.normal render pass
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-		VkBuffer vertexBuffers[] = { vertexBuffer };
-		VkDeviceSize offsets[] = { 0 };
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
-		vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 		VkViewport viewport{};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
@@ -1703,16 +1712,23 @@ void VulkanCore::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32
 		scissor.extent = swapChainExtent;
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
+		for (auto& [meshId, mesh] : *modelManager->getMeshs()) {
+			VkBuffer vertexBuffers[] = { bufferManager->getBuffer(mesh->getVertexBufferId()).buffer };
+			VkDeviceSize offsets[] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
+			vkCmdBindIndexBuffer(commandBuffer, bufferManager->getBuffer(mesh->getIndexBufferId()).buffer, 0, VK_INDEX_TYPE_UINT32);
 
-		for (auto& modelInstace : modelInstances) {
-			std::vector<uint32_t> dynamic_uniformOffset = { modelInstace->uniformOffset };
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 1, dynamic_uniformOffset.data());
+			for (auto&[meshId, modelInstanceIds] : *modelManager->getModelBindMeshMap()) {
+				for (auto modelId : modelInstanceIds) {
+					std::vector<uint32_t> dynamic_uniformOffset = { modelManager->getModelInstance(modelId)->uniformOffset };
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 1, dynamic_uniformOffset.data());
 
-			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-		}
+					vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(modelManager->getMesh(meshId)->getIndices().size()), 1, 0, 0, 0);
+				}
+			}
 
-		//gui render pass
+		}//gui render pass
 		vkCmdNextSubpass(commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 		// GUI 新帧
 		m_GUIManager->BeginFrame();

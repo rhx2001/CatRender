@@ -6,7 +6,7 @@ BufferManager::~BufferManager()
 {
 }
 
-void BufferManager::createVertexBuffer(Mesh*& mesh)
+void BufferManager::createVertexBuffer(Mesh* mesh)
 {
 	uint32_t id = generateUniqueId();
 
@@ -38,7 +38,7 @@ void BufferManager::createVertexBuffer(Mesh*& mesh)
 	bufferMap[id] = BufferInfo{ vertexBuffer, vertexBufferMemory };
 }
 
-void BufferManager::createIndexBuffer(Mesh*& mesh)
+void BufferManager::createIndexBuffer(Mesh* mesh)
 {
 	//ͬvertexbuffer
 	uint32_t id = generateUniqueId();

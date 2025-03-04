@@ -1,9 +1,12 @@
 #pragma once
+#define TINYOBJLOADER_IMPLEMENTATION
+#define GLM_ENABLE_EXPERIMENTAL
 #include <string>
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 #include <array>
 #include <vector>
+#include "glm/gtx/hash.hpp"
 
 class Mesh
 {
@@ -48,6 +51,10 @@ public:
 
     void setIndexBufferId(uint32_t ibId);
 
+    uint32_t getVertexBufferId() const { return vertexBufferId; }
+
+    uint32_t getIndexBufferId() const { return indexBufferId; }
+
     const std::vector<Vertex>& getVertices() const { return vertices; }
 
     const std::vector<uint32_t>& getIndices() const { return indices; }
@@ -62,3 +69,13 @@ public:
 };
 
 
+
+namespace std {
+    template<> struct hash<Mesh::Vertex> {
+        size_t operator()(Mesh::Vertex const& vertex) const {
+            return ((hash<glm::vec3>()(vertex.pos) ^
+                (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+                (hash<glm::vec2>()(vertex.texCoord) << 1);
+        }
+    };
+}
