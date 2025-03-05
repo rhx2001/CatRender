@@ -2,8 +2,18 @@
 #include <iostream>
 #include <ostream>
 
-BufferManager::~BufferManager()
-{
+BufferManager::~BufferManager() {
+	for (auto& pair : bufferMap) {
+		// 销毁 VkBuffer
+		if (pair.second.buffer != VK_NULL_HANDLE) {
+			vkDestroyBuffer(device_, pair.second.buffer, nullptr);
+		}
+		// 释放 VkDeviceMemory
+		if (pair.second.memory != VK_NULL_HANDLE) {
+			vkFreeMemory(device_, pair.second.memory, nullptr);
+		}
+	}
+	// bufferMap 会在离开作用域时自动清理
 }
 
 void BufferManager::createVertexBuffer(Mesh* mesh)

@@ -53,6 +53,4 @@ public:
 
 	void createIndexBuffer(Mesh* mesh);
 
-
-
 };

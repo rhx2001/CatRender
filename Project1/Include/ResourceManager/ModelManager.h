@@ -13,7 +13,7 @@ private:
 	std::unordered_map<uint32_t, std::vector<uint32_t>> ModelBindMeshMap;
 
 	uint32_t modelID_ = 0;
-	uint32_t Basic_DynamicUniformBufferOffset = 0;
+	size_t Basic_DynamicUniformBufferOffset = 0;
 
 public:
 	//ModelManager();
@@ -40,9 +40,8 @@ public:
 	std::shared_ptr<modelInstance>& getModelInstanceByID(uint32_t modelID) { return bindModels[modelID]; }
 	std::unordered_map<uint32_t, std::shared_ptr<modelInstance>>& getModelInstances() { return bindModels; }
 
-	void setOffest(uint32_t offset) { Basic_DynamicUniformBufferOffset = offset; }
+	void setOffest(size_t offset) { Basic_DynamicUniformBufferOffset = offset; }
 
-	//TODO: 将和同一个mesh的model绑定在一起，然后减少切换vertexbuffer以及indexbuffer的次数。
 
 
 private:

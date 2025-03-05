@@ -67,9 +67,9 @@ public:
 
     void drawFrame();
 
-    VkDevice getDevice() const { return device; };
+    VkDevice getDevice() const { return device; }
 
-    VkPhysicalDevice getPhysicalDevice() const { return physicalDevice; };
+    VkPhysicalDevice getPhysicalDevice() const { return physicalDevice; }
 
     VkQueue getGraphicsQueue() const { return graphicsQueue; }
 

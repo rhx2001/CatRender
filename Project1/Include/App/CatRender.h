@@ -18,7 +18,7 @@ public:
 	
 
 private:
-	std::unique_ptr<VulkanCore> Render;
+	std::unique_ptr<VulkanCore> Renderer;
 	std::unique_ptr<Window> GlfwWindow;
 	std::unique_ptr<GUIManager> m_GUIManager;
 };

@@ -4,7 +4,7 @@
 CatRender::CatRender()
 {
     GlfwWindow = std::make_unique<Window>();
-    Render = std::make_unique<VulkanCore>();
+    Renderer = std::make_unique<VulkanCore>();
     m_GUIManager = std::make_unique<GUIManager>();
 }
 CatRender::~CatRender() 
@@ -14,8 +14,8 @@ CatRender::~CatRender()
 void CatRender::init()
 {
     GlfwWindow->initWindow("CatRender", WIDTH, HEIGHT);
-    Render->initVulkan(GlfwWindow->getWindowHandle(), m_GUIManager.get());
-    m_GUIManager->init(GlfwWindow->getWindowHandle(), Render->getInstance(), Render.get());
+    Renderer->initVulkan(GlfwWindow->getWindowHandle(), m_GUIManager.get());
+    m_GUIManager->init(GlfwWindow->getWindowHandle(), Renderer->getInstance(), Renderer.get());
 }
 
 void CatRender::run()
@@ -31,9 +31,9 @@ void CatRender::mainloop()
         glfwPollEvents();
 
         // Vulkan »æÖÆ
-        Render->drawFrame();
+        Renderer->drawFrame();
     }
-    //vkDeviceWaitIdle(Render->getDecive());
+    //vkDeviceWaitIdle(Renderer->getDecive());
 }
 
 void CatRender::cleanup()

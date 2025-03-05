@@ -19,7 +19,10 @@ VulkanCore::VulkanCore()
 
 VulkanCore::~VulkanCore()
 {
+	bufferManager.reset();
+	delete camera;
 	vkDeviceWaitIdle(device);
+
 	// 0. 确保设备操作完成
 	if (device != VK_NULL_HANDLE) {
 		vkDeviceWaitIdle(device);
@@ -139,8 +142,7 @@ VulkanCore::~VulkanCore()
 		}
 	}
 
-	delete camera;
-	delete m_GUIManager;
+
 
 }
 
@@ -171,12 +173,12 @@ void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 	createTextureImageView();
 	createTextureSampler();
 
+	createUniformBuffers();
+	createDynamicUniformBuffers();
+
 	loadModel();
 	createVertexBuffer();
 	createIndexBuffer();
-
-	createUniformBuffers();
-	createDynamicUniformBuffers();
 
 	createDescriptorPool();
 	createDescriptorSets();
@@ -966,6 +968,9 @@ float VulkanCore::getAspectRatio()
 	if (minUboAlignment > 0) {
 		dynamicAlignment = (dynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);//保证偏移量是2^n
 	}
+
+	modelManager->setOffest(dynamicAlignment); //设定modelmanager的dynamicbuffer的offset；
+
 	size_t bufferSize = dynamicAlignment * MAX_NUM_OBJECT;
 
 	dynamic_uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
