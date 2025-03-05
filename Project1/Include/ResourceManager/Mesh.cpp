@@ -49,18 +49,18 @@ void Mesh::loadMesh(const std::string& path)
 
 void Mesh::setBufferIds(uint32_t vbId, uint32_t ibId)
 {
-	vbId = vertexBufferId;
-	ibId = indexBufferId;
+	vertexBufferId = vbId;
+	indexBufferId = ibId;
 }
 
 void Mesh::setVertexBufferId(uint32_t vbId)
 {
-	vbId = vertexBufferId;
+	vertexBufferId = vbId;
 }
 
 void Mesh::setIndexBufferId(uint32_t ibId)
 {
-	ibId = indexBufferId;
+	indexBufferId = ibId;
 }
 
 

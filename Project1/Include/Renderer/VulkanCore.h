@@ -34,7 +34,7 @@ const std::string TEXTURE_PATH = "textures/viking_room.png";
 
 const std::string MODEL_PATH = "models/viking_room.obj";
 const std::string MODEL_PATH2 = "models/african_head.obj";
-std::vector<std::string> PATHS{MODEL_PATH, MODEL_PATH2};
+const std::vector<std::string> PATHS{MODEL_PATH, MODEL_PATH2};
 
 
 

@@ -14,6 +14,7 @@ VulkanCore::VulkanCore()
 	currentFrame = 0;
 	camera = new Camera();
 	modelManager = std::make_unique<ModelManager>();
+	bufferManager = std::make_unique<BufferManager>(device, physicalDevice, commandPool, graphicsQueue);
 }
 
 VulkanCore::~VulkanCore()
@@ -176,9 +177,6 @@ void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 
 	createUniformBuffers();
 	createDynamicUniformBuffers();
-	
-	createModelInstance();
-
 
 	createDescriptorPool();
 	createDescriptorSets();
@@ -391,7 +389,7 @@ float VulkanCore::getAspectRatio()
 	VK_CHECK(vkCreateDevice(physicalDevice, &createInfo, nullptr, &device))//这里创建逻辑设备，如果失败则抛出异常
 
 
-	bufferManager = std::make_unique<BufferManager>(device, physicalDevice);//在创建完设备之后就可以绑定buffermanager了。
+
 	vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);//获取逻辑设备中对应的队列族，存住在graphicsQueue中
 	vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);//同上
 
@@ -976,21 +974,6 @@ float VulkanCore::getAspectRatio()
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, dynamic_uniformBuffers[i], dynamic_uniformBuffersMemory[i]);
 		vkMapMemory(device, dynamic_uniformBuffersMemory[i], 0, bufferSize, 0, &dynamic_uniformBuffersMapped[i]);
-	}
-}
-
- void VulkanCore::createModelInstance()
-{
-
-	for (size_t i = 0; i < 20; i++) {
-		modelInstances.push_back(
-			new modelInstance(
-				glm::translate(glm::mat4(1.0f), glm::vec3(static_cast<float>(i)/2.0f, glm::cos(i), 0.0f)),
-				"model" + std::to_string(i),
-				dynamicAlignment * static_cast<uint32_t>(i)
-			)
-		);
-		std::cout << "offset" << dynamicAlignment * static_cast<uint32_t>(i)<<" "<< modelInstances.size() << "\n";
 	}
 }
 
@@ -1712,20 +1695,18 @@ void VulkanCore::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32
 		scissor.extent = swapChainExtent;
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-		for (auto& [meshId, mesh] : *modelManager->getMeshs()) {
+		for (auto& [meshID, mesh] : *modelManager->getMeshs()) {
 			VkBuffer vertexBuffers[] = { bufferManager->getBuffer(mesh->getVertexBufferId()).buffer };
 			VkDeviceSize offsets[] = { 0 };
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
 			vkCmdBindIndexBuffer(commandBuffer, bufferManager->getBuffer(mesh->getIndexBufferId()).buffer, 0, VK_INDEX_TYPE_UINT32);
 
-			for (auto&[meshId, modelInstanceIds] : *modelManager->getModelBindMeshMap()) {
-				for (auto modelId : modelInstanceIds) {
-					std::vector<uint32_t> dynamic_uniformOffset = { modelManager->getModelInstance(modelId)->uniformOffset };
-					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 1, dynamic_uniformOffset.data());
+			for (uint32_t modelInstanceID : modelManager->getModelBindMesh(meshID)) {
+				std::vector<uint32_t> dynamic_uniformOffset = { modelManager->getModelInstanceByID(modelInstanceID)->uniformOffset };
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 1, dynamic_uniformOffset.data());
 
-					vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(modelManager->getMesh(meshId)->getIndices().size()), 1, 0, 0, 0);
-				}
+				vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(modelManager->getMesh(meshID)->getIndices().size()), 1, 0, 0, 0);
 			}
 
 		}//gui render pass
@@ -1772,7 +1753,7 @@ void VulkanCore::updateUniformBuffer_dynamic(size_t currentImage) const
 	camera->update(deltaTime); // 先更新摄像头状态
 	float num = 10.0f;
 
-	for (auto& modelInstance : modelInstances) {
+	for (auto& [modelID, modelInstance ] : modelManager->getModelInstances()) {
 
 		dynamic_UniformBufferObject ubo{};
 		//ubo.model = modelInstance->transM;

@@ -9,7 +9,7 @@ public:
 	modelInstance();
 	modelInstance(glm::mat4 model, std::string name, uint32_t uniformOffset)
 		: transM(model), name(name), uniformOffset(uniformOffset) {}
-	~modelInstance();
+	//~modelInstance();
 	void updateUniforms();
 	void setMesh(uint32_t MeshID) { meshBindID = MeshID; }
 

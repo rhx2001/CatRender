@@ -61,7 +61,7 @@ void ModelManager::createModelInstance(glm::mat4 transM, uint32_t meshId)
     uint32_t id = generateModelId();
     std::string name = "UnNamed" + std::to_string(id);
     bindModels[id] = std::make_shared<modelInstance>(transM, name, Basic_DynamicUniformBufferOffset * id);
-    bindModelMeshMap(modelId, meshId);
+    bindModelMeshMap(id, meshId);
 }
 
 void ModelManager::createModelInstance(std::string name, glm::mat4 transM, uint32_t meshId)
@@ -74,18 +74,18 @@ void ModelManager::createModelInstance(std::string name, glm::mat4 transM, uint3
 
 uint32_t ModelManager::generateModelId()
 {
-    return ++modelId;
+    return ++modelID_;
 }
 
-void ModelManager::bindModelMeshMap(uint32_t modelId, uint32_t meshId)
+void ModelManager::bindModelMeshMap(uint32_t modelID, uint32_t meshId)
 {
     if (ModelBindMeshMap.find(meshId) == ModelBindMeshMap.end())
     {
-        ModelBindMeshMap[meshId] = std::vector<uint32_t>(modelId);
+        ModelBindMeshMap[meshId] = std::vector<uint32_t>{ modelID };
     }
     else
     {
-        ModelBindMeshMap[meshId].push_back(modelId);
+        ModelBindMeshMap[meshId].push_back(modelID);
     }
 }
 

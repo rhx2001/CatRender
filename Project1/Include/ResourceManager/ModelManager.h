@@ -12,12 +12,12 @@ private:
 	std::unordered_map<uint32_t, std::shared_ptr<modelInstance>> bindModels;
 	std::unordered_map<uint32_t, std::vector<uint32_t>> ModelBindMeshMap;
 
-	uint32_t modelId = 0;
+	uint32_t modelID_ = 0;
 	uint32_t Basic_DynamicUniformBufferOffset = 0;
 
 public:
-	ModelManager();
-	~ModelManager();
+	//ModelManager();
+	//~ModelManager();
 
 	void LoadMeshs(const std::vector<std::string>& paths);
 	std::unordered_map<uint32_t, std::shared_ptr<Mesh>>* getMeshs() { return &bindMesh; }
@@ -34,9 +34,11 @@ public:
 	void createModelInstance(std::string name, glm::mat4 transM, uint32_t meshId);
 	void createModelInstance(std::string name, glm::mat4 transM, uint32_t meshId, uint32_t materialId);
 
-	void modelBindMesh(uint32_t meshId, uint32_t modelId);
+	void modelBindMesh(uint32_t meshID, uint32_t modelID);
 	std::unordered_map<uint32_t, std::vector<uint32_t>>* getModelBindMeshMap() { return &ModelBindMeshMap; }
-	std::shared_ptr<modelInstance> getModelInstance(uint32_t modelId) { return bindModels[modelId]; }
+	std::vector<uint32_t>& getModelBindMesh(uint32_t meshID) { return ModelBindMeshMap.at(meshID); }
+	std::shared_ptr<modelInstance>& getModelInstanceByID(uint32_t modelID) { return bindModels[modelID]; }
+	std::unordered_map<uint32_t, std::shared_ptr<modelInstance>>& getModelInstances() { return bindModels; }
 
 	void setOffest(uint32_t offset) { Basic_DynamicUniformBufferOffset = offset; }
 

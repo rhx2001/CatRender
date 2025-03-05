@@ -8,6 +8,7 @@ BufferManager::~BufferManager()
 
 void BufferManager::createVertexBuffer(Mesh* mesh)
 {
+
 	uint32_t id = generateUniqueId();
 
 	VkBuffer stagingBuffer;
@@ -66,6 +67,11 @@ void BufferManager::createIndexBuffer(Mesh* mesh)
 	bufferMap[id] = BufferInfo{ indexBuffer, indexBufferMemory };
 }
 
+uint32_t BufferManager::generateUniqueId()
+{
+	return ++BufferID;
+}
+
 void BufferManager::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
 {
 	//1. 创建缓冲区对象
@@ -97,7 +103,47 @@ void BufferManager::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, Vk
 
 void BufferManager::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 {
+	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
+	VkBufferCopy copyRegion{};
+	copyRegion.size = size;
+	vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+	endSingleTimeCommands(commandBuffer);
+}
+
+VkCommandBuffer BufferManager::beginSingleTimeCommands() const
+{
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandPool = commandPool_;
+	allocInfo.commandBufferCount = 1;
+	//分配一个commandbuffer
+	VkCommandBuffer commandBuffer;
+	vkAllocateCommandBuffers(device_, &allocInfo, &commandBuffer);
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+	return commandBuffer;
+}
+
+void BufferManager::endSingleTimeCommands(VkCommandBuffer commandBuffer) const {
+	vkEndCommandBuffer(commandBuffer);
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	vkQueueSubmit(graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(graphicsQueue_);
+
+	vkFreeCommandBuffers(device_, commandPool_, 1, &commandBuffer);
 }
 
 uint32_t BufferManager::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const
