@@ -32,6 +32,8 @@
     <ClInclude Include="Include\Renderer\Camera.hpp" />
     <ClInclude Include="Include\Renderer\VulkanCore.h" />
     <ClInclude Include="Include\ResourceManager\BufferManager.h" />
+    <ClInclude Include="Include\ResourceManager\Material.h" />
+    <ClInclude Include="Include\ResourceManager\MaterialManager.h" />
     <ClInclude Include="Include\ResourceManager\Mesh.h" />
     <ClInclude Include="Include\ResourceManager\ModelInstance.h" />
     <ClInclude Include="Include\ResourceManager\ModelManager.h" />
@@ -45,15 +47,17 @@
     <ClCompile Include="Include\Gui\imgui_impl_vulkan.cpp" />
     <ClCompile Include="Include\Gui\imgui_tables.cpp" />
     <ClCompile Include="Include\Gui\imgui_widgets.cpp" />
-    <ClCompile Include="Include\ResourceManager\Mesh.cpp" />
-    <ClCompile Include="Include\ResourceManager\ModelManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Src\App\CatRender.cpp" />
     <ClCompile Include="Src\Gui\GUIManager.cpp" />
     <ClCompile Include="Src\Renderer\Camera.cpp" />
     <ClCompile Include="Src\Renderer\VulkanCore.cpp" />
+    <ClCompile Include="Src\ResourceManager\Material.cpp" />
     <ClCompile Include="Src\ResourceManager\BufferManager.cpp" />
+    <ClCompile Include="Src\ResourceManager\MateralManager.cpp" />
+    <ClCompile Include="Src\ResourceManager\Mesh.cpp" />
     <ClCompile Include="Src\ResourceManager\ModelInstance.cpp" />
+    <ClCompile Include="Src\ResourceManager\ModelManager.cpp" />
     <ClCompile Include="Src\Window\Window.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -49,6 +49,12 @@
     <Filter Include="源文件\shader">
       <UniqueIdentifier>{5ebe1588-4bb9-4d84-9a2f-657335269a45}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\ResourceManager\Material">
+      <UniqueIdentifier>{e39c802d-12ea-4464-a2bf-a52d0c3b1390}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\ResourceManager\Material">
+      <UniqueIdentifier>{efeafd64-444b-41a2-a72f-f046c4e3b7cb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\App\CatRender.h">
@@ -102,6 +108,12 @@
     <ClInclude Include="Include\ResourceManager\BufferManager.h">
       <Filter>头文件\ResourceManager</Filter>
     </ClInclude>
+    <ClInclude Include="Include\ResourceManager\MaterialManager.h">
+      <Filter>头文件\ResourceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\ResourceManager\Material.h">
+      <Filter>头文件\ResourceManager\Material</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\App\CatRender.cpp">
@@ -146,14 +158,20 @@
     <ClCompile Include="Src\ResourceManager\ModelInstance.cpp">
       <Filter>源文件\ResourceManager</Filter>
     </ClCompile>
-    <ClCompile Include="Include\ResourceManager\Mesh.cpp">
-      <Filter>源文件\ResourceManager</Filter>
-    </ClCompile>
-    <ClCompile Include="Include\ResourceManager\ModelManager.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Src\ResourceManager\BufferManager.cpp">
       <Filter>源文件\ResourceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\Mesh.cpp">
+      <Filter>源文件\ResourceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\ModelManager.cpp">
+      <Filter>源文件\ResourceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\MateralManager.cpp">
+      <Filter>源文件\ResourceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\Material.cpp">
+      <Filter>源文件\ResourceManager\Material</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
