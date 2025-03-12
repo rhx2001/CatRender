@@ -108,10 +108,10 @@
     <ClInclude Include="Include\ResourceManager\BufferManager.h">
       <Filter>头文件\ResourceManager</Filter>
     </ClInclude>
-    <ClInclude Include="Include\ResourceManager\MaterialManager.h">
-      <Filter>头文件\ResourceManager</Filter>
-    </ClInclude>
     <ClInclude Include="Include\ResourceManager\Material.h">
+      <Filter>头文件\ResourceManager\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\ResourceManager\MaterialManager.h">
       <Filter>头文件\ResourceManager\Material</Filter>
     </ClInclude>
   </ItemGroup>
@@ -167,10 +167,10 @@
     <ClCompile Include="Src\ResourceManager\ModelManager.cpp">
       <Filter>源文件\ResourceManager</Filter>
     </ClCompile>
-    <ClCompile Include="Src\ResourceManager\MateralManager.cpp">
-      <Filter>源文件\ResourceManager</Filter>
-    </ClCompile>
     <ClCompile Include="Src\ResourceManager\Material.cpp">
+      <Filter>源文件\ResourceManager\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\MateralManager.cpp">
       <Filter>源文件\ResourceManager\Material</Filter>
     </ClCompile>
   </ItemGroup>

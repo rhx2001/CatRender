@@ -1027,6 +1027,11 @@ void VulkanCore::createDescriptorSets()
 		imageInfo.imageView = textureImageView;
 		imageInfo.sampler = textureSampler;
 
+		VkDescriptorBufferInfo dynamic_bufferInfo{};
+		dynamic_bufferInfo.buffer = dynamic_uniformBuffers[i];
+		dynamic_bufferInfo.offset = 0;
+		dynamic_bufferInfo.range = dynamicAlignment;//是单段大小
+
 		std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
 
 		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1046,10 +1051,7 @@ void VulkanCore::createDescriptorSets()
 		descriptorWrites[1].pImageInfo = &imageInfo;
 
 
-		VkDescriptorBufferInfo dynamic_bufferInfo{};
-		dynamic_bufferInfo.buffer = dynamic_uniformBuffers[i];
-		dynamic_bufferInfo.offset = 0;
-		dynamic_bufferInfo.range = dynamicAlignment;//是单段大小
+
 		descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		descriptorWrites[2].dstSet = descriptorSets[i];
 		descriptorWrites[2].dstBinding = 2;
