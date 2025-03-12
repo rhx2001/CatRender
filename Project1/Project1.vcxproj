@@ -34,6 +34,7 @@
     <ClInclude Include="Include\ResourceManager\BufferManager.h" />
     <ClInclude Include="Include\ResourceManager\Material.h" />
     <ClInclude Include="Include\ResourceManager\MaterialManager.h" />
+    <ClInclude Include="Include\ResourceManager\MaterialViewer.h" />
     <ClInclude Include="Include\ResourceManager\Mesh.h" />
     <ClInclude Include="Include\ResourceManager\ModelInstance.h" />
     <ClInclude Include="Include\ResourceManager\ModelManager.h" />

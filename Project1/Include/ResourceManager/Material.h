@@ -1,19 +1,33 @@
 #pragma once
+#include <memory>
 #include <vector>
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
+#include <ResourceManager/MaterialManager.h>
 class Material {
 public:
-    uint32_t shaderId;          // 使用哪个着色器
-    std::vector<uint32_t> bufferIds;  // 材质参数缓冲区
-    std::vector<uint32_t> textureIds; // 材质纹理
+    
+    void setBaseColor(const glm::vec4& color);
+    void setMetallic(float value);
 
 
-    // 材质参数(可以设计不同的结构来存储不同种类的材质数据)
+    // 更新统一缓冲区
+    void updateUniformData();
+
+private:
+    uint32_t materialId;
+    uint32_t offSet;
+	std::unique_ptr<MaterialManager> materialManager;
+    
+    // 材质参数数据
     struct {
         glm::vec4 baseColor;
         float metallic;
         float roughness;
-        // 其他参数...
+        float padding[2];
     } params;
+    
+    // 纹理引用
+
+
 };

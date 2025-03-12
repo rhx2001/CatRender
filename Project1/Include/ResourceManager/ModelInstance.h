@@ -11,6 +11,7 @@ public:
 		: transM(model), name(name), uniformOffset(uniformOffset) {}
 	//~modelInstance();
 	void updateUniforms();
+	//TODO：将unifrom的更新放到这里
 	void setMesh(uint32_t MeshID) { meshBindID = MeshID; }
 
 public:

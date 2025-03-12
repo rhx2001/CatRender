@@ -55,6 +55,12 @@
     <Filter Include="源文件\ResourceManager\Material">
       <UniqueIdentifier>{efeafd64-444b-41a2-a72f-f046c4e3b7cb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\ResourceManager\Model">
+      <UniqueIdentifier>{9cf76c17-79ed-4eb8-8f6e-886055232b83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\ResourceManager\Model">
+      <UniqueIdentifier>{9309951b-814f-471c-8dfe-9aa5ca5b1b88}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\App\CatRender.h">
@@ -96,15 +102,6 @@
     <ClInclude Include="Include\Renderer\Camera.hpp">
       <Filter>头文件\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Include\ResourceManager\ModelInstance.h">
-      <Filter>头文件\ResourceManager</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\ResourceManager\ModelManager.h">
-      <Filter>头文件\ResourceManager</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\ResourceManager\Mesh.h">
-      <Filter>头文件\ResourceManager</Filter>
-    </ClInclude>
     <ClInclude Include="Include\ResourceManager\BufferManager.h">
       <Filter>头文件\ResourceManager</Filter>
     </ClInclude>
@@ -113,6 +110,18 @@
     </ClInclude>
     <ClInclude Include="Include\ResourceManager\MaterialManager.h">
       <Filter>头文件\ResourceManager\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\ResourceManager\MaterialViewer.h">
+      <Filter>头文件\ResourceManager\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\ResourceManager\Mesh.h">
+      <Filter>头文件\ResourceManager\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\ResourceManager\ModelInstance.h">
+      <Filter>头文件\ResourceManager\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\ResourceManager\ModelManager.h">
+      <Filter>头文件\ResourceManager\Model</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -155,16 +164,7 @@
     <ClCompile Include="Src\Renderer\Camera.cpp">
       <Filter>源文件\Render</Filter>
     </ClCompile>
-    <ClCompile Include="Src\ResourceManager\ModelInstance.cpp">
-      <Filter>源文件\ResourceManager</Filter>
-    </ClCompile>
     <ClCompile Include="Src\ResourceManager\BufferManager.cpp">
-      <Filter>源文件\ResourceManager</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\ResourceManager\Mesh.cpp">
-      <Filter>源文件\ResourceManager</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\ResourceManager\ModelManager.cpp">
       <Filter>源文件\ResourceManager</Filter>
     </ClCompile>
     <ClCompile Include="Src\ResourceManager\Material.cpp">
@@ -172,6 +172,15 @@
     </ClCompile>
     <ClCompile Include="Src\ResourceManager\MateralManager.cpp">
       <Filter>源文件\ResourceManager\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\Mesh.cpp">
+      <Filter>源文件\ResourceManager\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\ModelInstance.cpp">
+      <Filter>源文件\ResourceManager\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\ModelManager.cpp">
+      <Filter>源文件\ResourceManager\Model</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
