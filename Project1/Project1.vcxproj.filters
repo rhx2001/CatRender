@@ -182,6 +182,9 @@
     <ClCompile Include="Src\ResourceManager\ModelManager.cpp">
       <Filter>源文件\ResourceManager\Model</Filter>
     </ClCompile>
+    <ClCompile Include="Include\ResourceManager\MaterialManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\Shader.frag">

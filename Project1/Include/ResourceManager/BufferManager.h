@@ -31,10 +31,6 @@ private:
 
 	uint32_t generateUniqueId();
 
-	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-
-	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-
 	VkCommandBuffer beginSingleTimeCommands() const;
 
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer) const;
@@ -53,4 +49,23 @@ public:
 
 	void createIndexBuffer(Mesh* mesh);
 
+	void createImage (uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format,
+		VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) const;
+
+	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+
+	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
+	template<typename T>
+	void copyFromStagingBuffer(VkDeviceMemory stageBufferMemory, T& data, uint32_t size);
+
 };
+
+template<typename T>
+inline void BufferManager::copyFromStagingBuffer(VkDeviceMemory stageBufferMemory, T& data, uint32_t size)
+{
+	void* mapData;
+	vkMapMemory(device_, stageBufferMemory, 0, size, 0, &mapData);
+	memcpy(mapData, &data, size);
+	vkUnmapMemory(device_, stageBufferMemory);
+}

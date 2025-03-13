@@ -7,7 +7,12 @@
 
 class MaterialManager {
 public:
+    MaterialManager(BufferManager& bufferManager);
+
+
     // 创建一个特定着色器的材质
+    void loadTextureImage(std::vector<std::string> ImagePaths);
+
     uint32_t createMaterial(uint32_t textureid);
     uint32_t createMaterial();//不填材质id的
 
@@ -27,14 +32,16 @@ private:
 	uint32_t MaterialID;
 	uint32_t MaterialViewerID;
 
-
-private:
-
-	std::unordered_map<uint32_t, VkImage> TextureImages;
-	std::unordered_map<uint32_t, VkDeviceMemory> TextureImageMemorys;//纹理图像内存，并且和每一个materialViewers绑定
+    std::unordered_map<uint32_t, VkImage> TextureImages;
+    std::unordered_map<uint32_t, VkDeviceMemory> TextureImageMemorys;//纹理图像内存，并且和每一个materialViewers绑定
+	std::unordered_map<uint32_t, uint32_t> mipLevels;
 
     std::unordered_map<uint32_t, Material> materials;
-	std::unordered_map<uint32_t, MaterialViewer> materialViewers;//方便重复利用viewers
+    std::unordered_map<uint32_t, MaterialViewer> materialViewers;//方便重复利用viewers
+
+private:
+    uint32_t ImageTextureGenerator();
+
 
     //ShaderManager& shaderManager;
 };

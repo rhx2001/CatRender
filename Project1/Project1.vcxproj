@@ -48,6 +48,7 @@
     <ClCompile Include="Include\Gui\imgui_impl_vulkan.cpp" />
     <ClCompile Include="Include\Gui\imgui_tables.cpp" />
     <ClCompile Include="Include\Gui\imgui_widgets.cpp" />
+    <ClCompile Include="Include\ResourceManager\MaterialManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Src\App\CatRender.cpp" />
     <ClCompile Include="Src\Gui\GUIManager.cpp" />

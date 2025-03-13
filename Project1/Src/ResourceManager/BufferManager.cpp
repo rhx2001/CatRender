@@ -77,6 +77,44 @@ void BufferManager::createIndexBuffer(Mesh* mesh)
 	bufferMap[id] = BufferInfo{ indexBuffer, indexBufferMemory };
 }
 
+void BufferManager::createImage (uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, 
+	VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) const
+{
+	{
+		//创建一个image
+		VkImageCreateInfo imageInfo{};
+		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		imageInfo.imageType = VK_IMAGE_TYPE_2D;
+		imageInfo.extent.width = width;
+		imageInfo.extent.height = height;
+		imageInfo.extent.depth = 1;
+		imageInfo.mipLevels = mipLevels;
+		imageInfo.arrayLayers = 1;
+		imageInfo.format = format;
+		imageInfo.tiling = tiling;
+		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		imageInfo.usage = usage;
+		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+
+		VK_CHECK(vkCreateImage(device_, &imageInfo, nullptr, &image))
+		//为image分配内存
+		VkMemoryRequirements memRequirements;
+		vkGetImageMemoryRequirements(device_, image, &memRequirements);
+
+		//分配内存
+		VkMemoryAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = memRequirements.size;
+		allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+
+		VK_CHECK(vkAllocateMemory(device_, &allocInfo, nullptr, &imageMemory))
+		VK_CHECK(vkBindImageMemory(device_, image, imageMemory, 0))
+
+	}
+}
+
 uint32_t BufferManager::generateUniqueId()
 {
 	return ++BufferID;
@@ -121,6 +159,7 @@ void BufferManager::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceS
 
 	endSingleTimeCommands(commandBuffer);
 }
+
 
 VkCommandBuffer BufferManager::beginSingleTimeCommands() const
 {
