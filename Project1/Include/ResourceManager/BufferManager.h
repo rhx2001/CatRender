@@ -37,11 +37,17 @@ private:
 
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
 
+	static bool hasStencilComponent(VkFormat format) { return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT; }
+
 public:
 	BufferManager(VkDevice& device, VkPhysicalDevice& physicalDevice, VkCommandPool& commandPool, VkQueue& graphicsQueue):
 	device_(device),physicalDevice_(physicalDevice), commandPool_(commandPool), graphicsQueue_(graphicsQueue){}
 
 	~BufferManager();
+
+	VkDevice getDevice() const { return device_; }
+
+	VkPhysicalDevice getPhysicalDevice() const { return physicalDevice_; }
 
 	BufferInfo getBuffer(uint32_t const id) const {return bufferMap.at(id);}
 
@@ -59,6 +65,16 @@ public:
 	template<typename T>
 	void copyFromStagingBuffer(VkDeviceMemory stageBufferMemory, T& data, uint32_t size);
 
+	void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format,
+		VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+
+	void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
+
+	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) const;
+
+	void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels) const;
+
+	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels) const;
 };
 
 template<typename T>

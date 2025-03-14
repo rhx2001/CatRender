@@ -28,19 +28,23 @@ public:
 private:
 	VkDescriptorPool descriptorPool;
     BufferManager& bufferManager;
-	uint32_t TextureImageID;
+	uint32_t TextureImageID = -1;
 	uint32_t MaterialID;
-	uint32_t MaterialViewerID;
+	uint32_t MaterialViewerID = -1;
 
     std::unordered_map<uint32_t, VkImage> TextureImages;
     std::unordered_map<uint32_t, VkDeviceMemory> TextureImageMemorys;//纹理图像内存，并且和每一个materialViewers绑定
 	std::unordered_map<uint32_t, uint32_t> mipLevels;
 
     std::unordered_map<uint32_t, Material> materials;
-    std::unordered_map<uint32_t, MaterialViewer> materialViewers;//方便重复利用viewers
+    std::unordered_map<uint32_t, std::shared_ptr<MaterialViewer>> materialViewers;//方便重复利用viewers
 
 private:
-    uint32_t ImageTextureGenerator();
+    uint32_t ImageTextureIDGenerator();
+
+    uint32_t ImageViewerIDGenerator();
+
+    void createTextureSampler(uint32_t ImageViewerID);
 
 
     //ShaderManager& shaderManager;

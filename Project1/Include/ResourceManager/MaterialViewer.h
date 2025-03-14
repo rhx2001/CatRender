@@ -10,11 +10,13 @@ private:
 	VkDescriptorSet descriptorSet;
 public:
 	MaterialViewer();
+	MaterialViewer(VkImageView TextureImageView, uint32_t mipLevels) :TextureImageView(TextureImageView), mipLevels(mipLevels){};
 	~MaterialViewer();
 	void createTextureImage(const std::string& path);
 	void createTextureImageView();
-	void createTextureSampler();
+	void createTextureSampler(VkSampler TextureSampler) :TextureSampler(TextureSampler) {};
 	void createDescriptorSet(VkDescriptorSetLayout descriptorSetLayout, VkDevice device);
+
 	VkDescriptorSet getDescriptorSet() { return descriptorSet; }
 	VkSampler getTextureSampler() { return TextureSampler; }
 	VkImageView getTextureImageView() { return TextureImageView; }

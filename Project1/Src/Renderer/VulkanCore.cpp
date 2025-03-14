@@ -583,6 +583,7 @@ float VulkanCore::getAspectRatio()
 
  void VulkanCore::createDescriptorSetLayout()
 {
+	 //TODO:创建一个用于material特征数的UBO以及一个用于采样器的描述符集布局
 	//创建一个描述符集布局。
 	VkDescriptorSetLayoutBinding uboLayoutBinding{};
 	uboLayoutBinding.binding = 0;
@@ -947,6 +948,8 @@ float VulkanCore::getAspectRatio()
 
  void VulkanCore::createUniformBuffers()
 {
+	//TODO:将管理UBO集成到bufferManager中
+	
 	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
 	uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
@@ -961,6 +964,7 @@ float VulkanCore::getAspectRatio()
 
  void VulkanCore::createDynamicUniformBuffers()
 {
+	 //TODO:创建材质的特征值ubo
 	VkPhysicalDeviceProperties deviceProperties;
 	vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
 	size_t minUboAlignment = deviceProperties.limits.minUniformBufferOffsetAlignment;//获取最小位移单位
@@ -1325,8 +1329,8 @@ void VulkanCore::createImage(uint32_t width, uint32_t height, uint32_t mipLevels
 	allocInfo.allocationSize = memRequirements.size;
 	allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
 
-	VK_CHECK(vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory));
-	VK_CHECK(vkBindImageMemory(device, image, imageMemory, 0));
+	VK_CHECK(vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory))
+	VK_CHECK(vkBindImageMemory(device, image, imageMemory, 0))
 
 }
 
