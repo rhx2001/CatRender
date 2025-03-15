@@ -163,12 +163,14 @@ void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 	createSwapChain();
 	createImageViews();
 	createRenderPass();
+
+
+
 	createDescriptorSetLayout();
+	createDescriptorPool();
+	
 	createGraphicsPipeline_Rasterizer();
 
-	createCommandPool();
-	createDepthResources();
-	createFramebuffers();
 	createTextureImage();
 	createTextureImageView();
 	createTextureSampler();
@@ -176,12 +178,20 @@ void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 	createUniformBuffers();
 	createDynamicUniformBuffers();
 
+	createDescriptorSets();
+
+	createCommandPool();
+	createDepthResources();
+	createFramebuffers();
+
+
+
+
 	loadModel();
 	createVertexBuffer();
 	createIndexBuffer();
 
-	createDescriptorPool();
-	createDescriptorSets();
+
 	createCommandBuffers();
 	createSyncObjects();
 	
@@ -591,6 +601,21 @@ float VulkanCore::getAspectRatio()
 	uboLayoutBinding.descriptorCount = 1;
 	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
+	VkDescriptorSetLayoutBinding dynamic_uboLayoutBinding{};
+	dynamic_uboLayoutBinding.binding = 1;
+	dynamic_uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+	dynamic_uboLayoutBinding.descriptorCount = 1;
+	dynamic_uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+	//将两个描述符集布局绑定到一个数组中。
+	std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, dynamic_uboLayoutBinding };
+	VkDescriptorSetLayoutCreateInfo layoutInfo{};
+	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+	layoutInfo.pBindings = bindings.data();
+
+	VK_CHECK(vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout))
+
 	//创建一个采样绑定的描述符集布局。
 	VkDescriptorSetLayoutBinding samplerLayoutBinding{};
 	samplerLayoutBinding.binding = 1;
@@ -599,21 +624,205 @@ float VulkanCore::getAspectRatio()
 	samplerLayoutBinding.pImmutableSamplers = nullptr;
 	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-	VkDescriptorSetLayoutBinding dynamic_uboLayoutBinding{};
-	dynamic_uboLayoutBinding.binding = 2;
-	dynamic_uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-	dynamic_uboLayoutBinding.descriptorCount = 1;
-	dynamic_uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	VkDescriptorSetLayoutCreateInfo TextureLayoutInfo{};
+	TextureLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	TextureLayoutInfo.bindingCount = 1;
+	TextureLayoutInfo.pBindings = &samplerLayoutBinding;
+	VK_CHECK(vkCreateDescriptorSetLayout(device, &TextureLayoutInfo, nullptr, &materialSetLayout))
 
-	//将两个描述符集布局绑定到一个数组中。
-	std::array<VkDescriptorSetLayoutBinding, 3> bindings = { uboLayoutBinding, samplerLayoutBinding, dynamic_uboLayoutBinding };
-	VkDescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-	layoutInfo.pBindings = bindings.data();
+	VkDescriptorSetLayoutBinding MaterialUboLayoutBinding{};
+	MaterialUboLayoutBinding.binding = 0;
+	MaterialUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+	MaterialUboLayoutBinding.descriptorCount = 1;
+	MaterialUboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-	VK_CHECK(vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout))
+	VkDescriptorSetLayoutCreateInfo MaterialUboLayout{};
+	MaterialUboLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	MaterialUboLayout.bindingCount = 1;
+	MaterialUboLayout.pBindings = &MaterialUboLayoutBinding;
+	VK_CHECK(vkCreateDescriptorSetLayout(device, &MaterialUboLayout, nullptr, &materialParaSetLayout))
+
+	layouts_ = { materialSetLayout, materialParaSetLayout };
 }
+
+ void VulkanCore::createDescriptorPool()
+ {
+	 std::array<VkDescriptorPoolSize, 2> poolSizes{};
+	 poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	 poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+	 poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+	 poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+
+
+	 VkDescriptorPoolCreateInfo poolInfo{};
+	 poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	 poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+	 poolInfo.pPoolSizes = poolSizes.data();
+	 poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * 2);
+
+	 VK_CHECK(vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool))
+
+	std::array<VkDescriptorPoolSize, 2> TexturePoolSizes{};
+	poolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * TEXTURE_NUM);
+
+	poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+	poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * TEXTURE_NUM);
+
+	VkDescriptorPoolCreateInfo TexturePoolInfo{};
+	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+	poolInfo.pPoolSizes = poolSizes.data();
+	poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * 2);
+	VK_CHECK(vkCreateDescriptorPool(device, &TexturePoolInfo, nullptr, &TextureDescriptorPool))
+
+
+ }
+
+ void VulkanCore::createUniformBuffers()
+ {
+	 //TODO:将管理UBO集成到bufferManager中
+
+	 VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+
+	 uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+	 uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+	 uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+
+	 for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		 createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
+		 vkMapMemory(device, uniformBuffersMemory[i], 0, bufferSize, 0, &uniformBuffersMapped[i]);
+	 }
+ }
+
+ void VulkanCore::createDynamicUniformBuffers()
+ {
+	
+	 VkPhysicalDeviceProperties deviceProperties;
+	 vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+	 size_t minUboAlignment = deviceProperties.limits.minUniformBufferOffsetAlignment;//获取最小位移单位
+	 dynamicAlignment = sizeof(UniformBufferObject);//获取uniformbuffer的大小
+	 if (minUboAlignment > 0) {
+		 dynamicAlignment = (dynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);//保证偏移量是2^n
+	 }
+
+	 modelManager->setOffest(dynamicAlignment); //设定modelmanager的dynamicbuffer的offset；
+
+	 size_t bufferSize = dynamicAlignment * MAX_NUM_OBJECT;
+
+	 dynamic_uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+	 dynamic_uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+	 dynamic_uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+	 for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		 createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, dynamic_uniformBuffers[i], dynamic_uniformBuffersMemory[i]);
+		 vkMapMemory(device, dynamic_uniformBuffersMemory[i], 0, bufferSize, 0, &dynamic_uniformBuffersMapped[i]);
+	 }
+
+	 //TODO:创建材质的特征值ubo
+	 Texture_dynamicAlignment = sizeof(MaterialManager::MaterialBlock);//获取uniformbuffer的大小
+	 if (minUboAlignment > 0) {
+		 Texture_dynamicAlignment = (Texture_dynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);//保证偏移量是2^n
+	 }
+
+	 materialManager->setOffest(static_cast<uint32_t>(Texture_dynamicAlignment)); //设定modelmanager的dynamicbuffer的offset；
+
+	 bufferSize = Texture_dynamicAlignment * TEXTURE_NUM;
+
+	 Texture_dynamic_uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+	 Texture_dynamic_uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+	 Texture_dynamic_uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+	 for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		 createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, Texture_dynamic_uniformBuffers[i], Texture_dynamic_uniformBuffersMemory[i]);
+		 vkMapMemory(device, Texture_dynamic_uniformBuffersMemory[i], 0, bufferSize, 0, &Texture_dynamic_uniformBuffersMapped[i]);
+	 }
+
+ }
+
+ void VulkanCore::createDescriptorSets()
+ {
+
+	 //创建DescriptorSets指定了将要绑定到描述符的实际缓冲区或图像资源
+	 VkDescriptorSetAllocateInfo allocInfo{};
+	 allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	 allocInfo.descriptorPool = descriptorPool;
+	 allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	 allocInfo.pSetLayouts = layouts_.data();
+	 descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+
+	 VkDescriptorSetAllocateInfo TextureAllocInfo{};
+	 allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	 allocInfo.descriptorPool = TextureDescriptorPool;
+	 allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	 allocInfo.pSetLayouts = layouts_.data();
+	 TextureDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+
+	 VK_CHECK(vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()))
+	 VK_CHECK(vkAllocateDescriptorSets(device, &TextureAllocInfo, descriptorSets.data()))
+	 for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		 VkDescriptorBufferInfo bufferInfo{};
+		 bufferInfo.buffer = uniformBuffers[i];
+		 bufferInfo.offset = 0;
+		 bufferInfo.range = sizeof(UniformBufferObject);
+
+		 VkDescriptorImageInfo imageInfo{};
+		 imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		 imageInfo.imageView = textureImageView;
+		 imageInfo.sampler = textureSampler;
+
+		 VkDescriptorBufferInfo dynamic_bufferInfo{};
+		 dynamic_bufferInfo.buffer = dynamic_uniformBuffers[i];
+		 dynamic_bufferInfo.offset = 0;
+		 dynamic_bufferInfo.range = modelManager->getOffeset();//是单段大小
+
+		 std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+
+		 descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		 descriptorWrites[0].dstSet = descriptorSets[i];
+		 descriptorWrites[0].dstBinding = 0;
+		 descriptorWrites[0].dstArrayElement = 0;
+		 descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		 descriptorWrites[0].descriptorCount = 1;
+		 descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+		 descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		 descriptorWrites[1].dstSet = descriptorSets[i];
+		 descriptorWrites[1].dstBinding = 1;
+		 descriptorWrites[1].dstArrayElement = 0;
+		 descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+		 descriptorWrites[1].descriptorCount = 1;
+		 descriptorWrites[1].pBufferInfo = &dynamic_bufferInfo;
+
+		 vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+
+
+		 VkDescriptorBufferInfo Texture_dynamic_bufferInfo{};
+		 dynamic_bufferInfo.buffer = Texture_dynamic_uniformBuffers[i];
+		 dynamic_bufferInfo.offset = 0;
+		 dynamic_bufferInfo.range = modelManager->getOffeset();//是单段大小
+
+		 std::array<VkWriteDescriptorSet, 2> TextureDescriptorWrites{};
+		 TextureDescriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		 TextureDescriptorWrites[0].dstSet = TextureDescriptorSets[i];
+		 TextureDescriptorWrites[0].dstBinding = 0;
+		 TextureDescriptorWrites[0].dstArrayElement = 0;
+		 TextureDescriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+		 TextureDescriptorWrites[0].descriptorCount = 1;
+		 TextureDescriptorWrites[0].pBufferInfo = &Texture_dynamic_bufferInfo;
+
+		 //TODO:将所有需要创建布局的材质布局都update
+		 TextureDescriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		 TextureDescriptorWrites[1].dstSet = TextureDescriptorSets[i];
+		 TextureDescriptorWrites[1].dstBinding = 1;
+		 TextureDescriptorWrites[1].dstArrayElement = 0;
+		 TextureDescriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		 TextureDescriptorWrites[1].descriptorCount = 1;
+		 TextureDescriptorWrites[1].pImageInfo = &imageInfo;
+	 }
+ }
+
+
 
  void VulkanCore::createGraphicsPipeline_Rasterizer()
 {
@@ -733,8 +942,8 @@ float VulkanCore::getAspectRatio()
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 1;
-	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+	pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+	pipelineLayoutInfo.pSetLayouts = layouts.data();
 
 	VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout))
 
@@ -946,127 +1155,11 @@ float VulkanCore::getAspectRatio()
 	//vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
- void VulkanCore::createUniformBuffers()
-{
-	//TODO:将管理UBO集成到bufferManager中
-	
-	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-
-	uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-	uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
-	uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
-		vkMapMemory(device, uniformBuffersMemory[i], 0, bufferSize, 0, &uniformBuffersMapped[i]);
-	}
-}
-
- void VulkanCore::createDynamicUniformBuffers()
-{
-	 //TODO:创建材质的特征值ubo
-	VkPhysicalDeviceProperties deviceProperties;
-	vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
-	size_t minUboAlignment = deviceProperties.limits.minUniformBufferOffsetAlignment;//获取最小位移单位
-	dynamicAlignment = sizeof(UniformBufferObject);//获取uniformbuffer的大小
-	if (minUboAlignment > 0) {
-		dynamicAlignment = (dynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);//保证偏移量是2^n
-	}
-
-	modelManager->setOffest(dynamicAlignment); //设定modelmanager的dynamicbuffer的offset；
-
-	size_t bufferSize = dynamicAlignment * MAX_NUM_OBJECT;
-
-	dynamic_uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-	dynamic_uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
-	dynamic_uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, dynamic_uniformBuffers[i], dynamic_uniformBuffersMemory[i]);
-		vkMapMemory(device, dynamic_uniformBuffersMemory[i], 0, bufferSize, 0, &dynamic_uniformBuffersMapped[i]);
-	}
-}
-
- void VulkanCore::createDescriptorPool()
-{
-	std::array<VkDescriptorPoolSize, 3> poolSizes{};
-	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-	poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-	poolSizes[2].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-	poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-	VkDescriptorPoolCreateInfo poolInfo{};
-	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-	poolInfo.pPoolSizes = poolSizes.data();
-
-	poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	VK_CHECK(vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool))
-}
-
-void VulkanCore::createDescriptorSets()
-{
-
-	//创建DescriptorSets指定了将要绑定到描述符的实际缓冲区或图像资源
-	std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
-	VkDescriptorSetAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = descriptorPool;
-	allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	allocInfo.pSetLayouts = layouts.data();
-	descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-	VK_CHECK(vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()))
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = uniformBuffers[i];
-		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(UniformBufferObject);
-
-		VkDescriptorImageInfo imageInfo{};
-		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo.imageView = textureImageView;
-		imageInfo.sampler = textureSampler;
-
-		VkDescriptorBufferInfo dynamic_bufferInfo{};
-		dynamic_bufferInfo.buffer = dynamic_uniformBuffers[i];
-		dynamic_bufferInfo.offset = 0;
-		dynamic_bufferInfo.range = dynamicAlignment;//是单段大小
-
-		std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
-
-		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites[0].dstSet = descriptorSets[i];
-		descriptorWrites[0].dstBinding = 0;
-		descriptorWrites[0].dstArrayElement = 0;
-		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrites[0].descriptorCount = 1;
-		descriptorWrites[0].pBufferInfo = &bufferInfo;
-
-		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites[1].dstSet = descriptorSets[i];
-		descriptorWrites[1].dstBinding = 1;
-		descriptorWrites[1].dstArrayElement = 0;
-		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		descriptorWrites[1].descriptorCount = 1;
-		descriptorWrites[1].pImageInfo = &imageInfo;
 
 
 
-		descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites[2].dstSet = descriptorSets[i];
-		descriptorWrites[2].dstBinding = 2;
-		descriptorWrites[2].dstArrayElement = 0;
-		descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-		descriptorWrites[2].descriptorCount = 1;
-		descriptorWrites[2].pBufferInfo = &dynamic_bufferInfo;
 
-		vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-	}
-}
+
 
 void VulkanCore::createCommandBuffers()
 {

@@ -41,7 +41,7 @@ public:
 	std::unordered_map<uint32_t, std::shared_ptr<modelInstance>>& getModelInstances() { return bindModels; }
 
 	void setOffest(size_t offset) { Basic_DynamicUniformBufferOffset = offset; }
-
+	uint32_t getOffeset() { return Basic_DynamicUniformBufferOffset; }
 
 
 private:

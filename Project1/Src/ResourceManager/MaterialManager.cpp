@@ -1,5 +1,6 @@
-#include "MaterialManager.h"
 #define STB_IMAGE_IMPLEMENTATION
+#include "ResourceManager/MaterialManager.h"
+
 #include <iostream>
 #include <ostream>
 #include <stb_image/stb_image.h>
@@ -49,9 +50,11 @@ void MaterialManager::loadTextureImage(std::vector<std::string> ImagePaths)
 		createTextureSampler(ImageViewerID);
 
 
+
 	}
 
 }
+
 
 uint32_t MaterialManager::ImageTextureIDGenerator()
 {

@@ -170,9 +170,6 @@
     <ClCompile Include="Src\ResourceManager\Material.cpp">
       <Filter>源文件\ResourceManager\Material</Filter>
     </ClCompile>
-    <ClCompile Include="Src\ResourceManager\MateralManager.cpp">
-      <Filter>源文件\ResourceManager\Material</Filter>
-    </ClCompile>
     <ClCompile Include="Src\ResourceManager\Mesh.cpp">
       <Filter>源文件\ResourceManager\Model</Filter>
     </ClCompile>
@@ -182,7 +179,10 @@
     <ClCompile Include="Src\ResourceManager\ModelManager.cpp">
       <Filter>源文件\ResourceManager\Model</Filter>
     </ClCompile>
-    <ClCompile Include="Include\ResourceManager\MaterialManager.cpp">
+    <ClCompile Include="Src\ResourceManager\MaterialManager.cpp">
+      <Filter>源文件\ResourceManager\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="Include\ResourceManager\MaterialViewer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -6,7 +6,16 @@
 #include "MaterialViewer.h"
 
 class MaterialManager {
+
 public:
+    struct MaterialBlock {
+        alignas(16) glm::vec4 baseColorFactor;
+        alignas(4) float metallicFactor;
+        alignas(4) float roughnessFactor;
+        alignas(4) float occlusionStrength;
+        alignas(16) char reserved[32]; // 预留给未来扩展
+    };
+
     MaterialManager(BufferManager& bufferManager);
 
 
@@ -25,12 +34,17 @@ public:
 
     void bind(VkCommandBuffer cmd, VkPipelineLayout layout);
 
+
+    void setOffest(uint32_t offset) { BasicDynamicOffset = offset; }
+    uint32_t getOffeset() const { return BasicDynamicOffset; }
+
 private:
 	VkDescriptorPool descriptorPool;
     BufferManager& bufferManager;
 	uint32_t TextureImageID = -1;
 	uint32_t MaterialID;
 	uint32_t MaterialViewerID = -1;
+    uint32_t BasicDynamicOffset = 0;
 
     std::unordered_map<uint32_t, VkImage> TextureImages;
     std::unordered_map<uint32_t, VkDeviceMemory> TextureImageMemorys;//纹理图像内存，并且和每一个materialViewers绑定
@@ -45,6 +59,7 @@ private:
     uint32_t ImageViewerIDGenerator();
 
     void createTextureSampler(uint32_t ImageViewerID);
+
 
 
     //ShaderManager& shaderManager;

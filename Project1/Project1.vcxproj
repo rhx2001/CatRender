@@ -48,7 +48,7 @@
     <ClCompile Include="Include\Gui\imgui_impl_vulkan.cpp" />
     <ClCompile Include="Include\Gui\imgui_tables.cpp" />
     <ClCompile Include="Include\Gui\imgui_widgets.cpp" />
-    <ClCompile Include="Include\ResourceManager\MaterialManager.cpp" />
+    <ClCompile Include="Include\ResourceManager\MaterialViewer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Src\App\CatRender.cpp" />
     <ClCompile Include="Src\Gui\GUIManager.cpp" />
@@ -56,7 +56,7 @@
     <ClCompile Include="Src\Renderer\VulkanCore.cpp" />
     <ClCompile Include="Src\ResourceManager\Material.cpp" />
     <ClCompile Include="Src\ResourceManager\BufferManager.cpp" />
-    <ClCompile Include="Src\ResourceManager\MateralManager.cpp" />
+    <ClCompile Include="Src\ResourceManager\MaterialManager.cpp" />
     <ClCompile Include="Src\ResourceManager\Mesh.cpp" />
     <ClCompile Include="Src\ResourceManager\ModelInstance.cpp" />
     <ClCompile Include="Src\ResourceManager\ModelManager.cpp" />

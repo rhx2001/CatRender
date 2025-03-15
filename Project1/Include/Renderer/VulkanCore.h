@@ -18,6 +18,7 @@
 
 #include "Camera.hpp"
 #include "ResourceManager/BufferManager.h"
+#include "ResourceManager/MaterialManager.h"
 #include "ResourceManager/ModelManager.h"
 
 
@@ -39,6 +40,7 @@ const std::vector<std::string> PATHS{MODEL_PATH, MODEL_PATH2};
 
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
+const size_t TEXTURE_NUM = 10;
 
 const size_t MAX_NUM_OBJECT = 100;
 
@@ -143,11 +145,16 @@ private:
 	std::vector<VkImageView> swapChainImageViews;
 
 	VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout materialSetLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout materialParaSetLayout = VK_NULL_HANDLE;
+    std::array<VkDescriptorSetLayout, 3> layouts_;
 
 	VkRenderPass renderPass = VK_NULL_HANDLE;
 	VkPipeline graphicsPipeline = VK_NULL_HANDLE;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 	VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+
+	VkDescriptorPool TextureDescriptorPool = VK_NULL_HANDLE;
 
 	std::vector<VkFramebuffer> SwapChainFramebuffers;
 
@@ -179,10 +186,16 @@ private:
     std::vector<void*> dynamic_uniformBuffersMapped;
     size_t dynamicAlignment;//Æ«ÒÆÁ¿
 
+    std::vector<VkBuffer> Texture_dynamic_uniformBuffers;
+    std::vector<VkDeviceMemory> Texture_dynamic_uniformBuffersMemory;
+    std::vector<void*> Texture_dynamic_uniformBuffersMapped;
+    size_t Texture_dynamicAlignment;//Æ«ÒÆÁ¿
+
     std::vector<modelInstance*> modelInstances;
 
 
     std::vector<VkDescriptorSet> descriptorSets;
+    std::vector<VkDescriptorSet> TextureDescriptorSets;
 
     std::vector<VkCommandBuffer> commandBuffers;
 
@@ -199,6 +212,8 @@ private:
     std::unique_ptr<ModelManager> modelManager;
 
     std::unique_ptr<BufferManager> bufferManager;
+
+    std::unique_ptr<MaterialManager> materialManager;
 
 
 private:
