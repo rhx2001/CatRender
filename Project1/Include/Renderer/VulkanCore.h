@@ -8,7 +8,6 @@
 #include "Window/window.h" 
 #include "glm/glm.hpp"
 #include "glm/gtx/hash.hpp"
-#include "stb_image/stb_image.h"
 #include "ResourceManager/ModelInstance.h"
 #include <stdexcept>
 #include <iostream>
@@ -31,7 +30,7 @@ const bool enableValidationLayers = true;
 
 #define VK_CHECK(f) { VkResult res = (f); if (res != VK_SUCCESS) { std::cerr << "Fatal: VkResult is \"" << res << "\" in " << __FILE__ << " at line " << __LINE__ << std::endl; abort(); } }
 
-const std::string TEXTURE_PATH = "textures/viking_room.png";
+const std::vector < std::string > TEXTURE_PATH{ "textures/viking_room.png", "african_head_diffuse.tga" };
 
 const std::string MODEL_PATH = "models/viking_room.obj";
 const std::string MODEL_PATH2 = "models/african_head.obj";
@@ -39,7 +38,7 @@ const std::vector<std::string> PATHS{MODEL_PATH, MODEL_PATH2};
 
 
 
-const int MAX_FRAMES_IN_FLIGHT = 2;
+const size_t MAX_FRAMES_IN_FLIGHT = 2;
 const size_t TEXTURE_NUM = 10;
 
 const size_t MAX_NUM_OBJECT = 100;
@@ -195,6 +194,7 @@ private:
 
 
     std::vector<VkDescriptorSet> descriptorSets;
+    std::vector<VkDescriptorSet> TextureUBODescriptorSets;
     std::vector<VkDescriptorSet> TextureDescriptorSets;
 
     std::vector<VkCommandBuffer> commandBuffers;

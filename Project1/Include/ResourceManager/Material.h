@@ -3,22 +3,17 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
-#include <ResourceManager/MaterialManager.h>
+
+#include "MaterialViewer.h"
+
 class Material {
-public:
-    
-    void setBaseColor(const glm::vec4& color);
-    void setMetallic(float value);
 
-
-    // 更新统一缓冲区
-    void updateUniformData();
 
 private:
     uint32_t materialId;
     uint32_t offSet;
-	std::unique_ptr<MaterialManager> materialManager;
-    
+	//std::unique_ptr<MaterialManager> materialManager;
+	std::shared_ptr<MaterialViewer>(materialViewer);
     // 材质参数数据
     struct {
         glm::vec4 baseColor;
@@ -29,5 +24,13 @@ private:
     
     // 纹理引用
 
+public:
 
+    Material(uint32_t materialId, uint32_t offSet, const std::shared_ptr<MaterialViewer>& Viewer) :materialId(materialId), offSet(offSet), materialViewer(Viewer) {}
+    void setBaseColor(const glm::vec4& color);
+    void setMetallic(float value);
+
+
+    // 更新统一缓冲区
+    void updateUniformData();
 };

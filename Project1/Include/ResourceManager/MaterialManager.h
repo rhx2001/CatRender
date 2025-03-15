@@ -1,9 +1,9 @@
 #pragma once
 #include <unordered_map>
 #include <vulkan/vulkan.h>
-#include "Material.h"
-#include "BufferManager.h"
-#include "MaterialViewer.h"
+#include "ResourceManager/Material.h"
+#include "ResourceManager/BufferManager.h"
+#include "ResourceManager/MaterialViewer.h"
 
 class MaterialManager {
 
@@ -20,7 +20,7 @@ public:
 
 
     // 创建一个特定着色器的材质
-    void loadTextureImage(std::vector<std::string> ImagePaths);
+    void loadTextureImage(std::string path);
 
     uint32_t createMaterial(uint32_t textureid);
     uint32_t createMaterial();//不填材质id的
@@ -29,7 +29,9 @@ public:
     void updateMaterialParams(uint32_t materialId, const void* data, size_t size);
 
     // 获取用于渲染的MaterialViewer
-    MaterialViewer* getMaterialViewer(uint32_t materialId);
+    std::shared_ptr < MaterialViewer> getMaterialViewer (const uint32_t materialId) { return  materialViewers[materialId]; }
+
+	std::unordered_map<uint32_t, std::shared_ptr<MaterialViewer>> getMaterialViewers() { return materialViewers; }
 
 
     void bind(VkCommandBuffer cmd, VkPipelineLayout layout);
@@ -50,13 +52,15 @@ private:
     std::unordered_map<uint32_t, VkDeviceMemory> TextureImageMemorys;//纹理图像内存，并且和每一个materialViewers绑定
 	std::unordered_map<uint32_t, uint32_t> mipLevels;
 
-    std::unordered_map<uint32_t, Material> materials;
+    std::unordered_map<uint32_t, std::shared_ptr< Material>> materials;
     std::unordered_map<uint32_t, std::shared_ptr<MaterialViewer>> materialViewers;//方便重复利用viewers
 
 private:
     uint32_t ImageTextureIDGenerator();
 
     uint32_t ImageViewerIDGenerator();
+
+    uint32_t MaterialIDGenerator();
 
     void createTextureSampler(uint32_t ImageViewerID);
 

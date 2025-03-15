@@ -15,6 +15,7 @@ VulkanCore::VulkanCore()
 	camera = new Camera();
 	modelManager = std::make_unique<ModelManager>();
 	bufferManager = std::make_unique<BufferManager>(device, physicalDevice, commandPool, graphicsQueue);
+	materialManager = std::make_unique<MaterialManager>(*bufferManager);
 }
 
 VulkanCore::~VulkanCore()
@@ -172,8 +173,8 @@ void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 	createGraphicsPipeline_Rasterizer();
 
 	createTextureImage();
-	createTextureImageView();
-	createTextureSampler();
+	//createTextureImageView();
+	//createTextureSampler();
 
 	createUniformBuffers();
 	createDynamicUniformBuffers();
@@ -618,7 +619,7 @@ float VulkanCore::getAspectRatio()
 
 	//创建一个采样绑定的描述符集布局。
 	VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-	samplerLayoutBinding.binding = 1;
+	samplerLayoutBinding.binding =0;
 	samplerLayoutBinding.descriptorCount = 1;
 	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	samplerLayoutBinding.pImmutableSamplers = nullptr;
@@ -642,7 +643,7 @@ float VulkanCore::getAspectRatio()
 	MaterialUboLayout.pBindings = &MaterialUboLayoutBinding;
 	VK_CHECK(vkCreateDescriptorSetLayout(device, &MaterialUboLayout, nullptr, &materialParaSetLayout))
 
-	layouts_ = { materialSetLayout, materialParaSetLayout };
+	layouts_ = { descriptorSetLayout, materialSetLayout, materialParaSetLayout };
 }
 
  void VulkanCore::createDescriptorPool()
@@ -664,18 +665,20 @@ float VulkanCore::getAspectRatio()
 
 	 VK_CHECK(vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool))
 
-	std::array<VkDescriptorPoolSize, 2> TexturePoolSizes{};
-	poolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * TEXTURE_NUM);
 
-	poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-	poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * TEXTURE_NUM);
+		 //创建和Texture相关的描述符池
+	std::array<VkDescriptorPoolSize, 2> TexturePoolSizes{};
+	TexturePoolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	TexturePoolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * TEXTURE_NUM);
+
+	TexturePoolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+	TexturePoolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * TEXTURE_NUM);
 
 	VkDescriptorPoolCreateInfo TexturePoolInfo{};
-	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-	poolInfo.pPoolSizes = poolSizes.data();
-	poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * 2);
+	TexturePoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	TexturePoolInfo.poolSizeCount = static_cast<uint32_t>(TexturePoolSizes.size());
+	TexturePoolInfo.pPoolSizes = TexturePoolSizes.data();
+	TexturePoolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * 2 * TEXTURE_NUM);
 	VK_CHECK(vkCreateDescriptorPool(device, &TexturePoolInfo, nullptr, &TextureDescriptorPool))
 
 
@@ -708,7 +711,7 @@ float VulkanCore::getAspectRatio()
 		 dynamicAlignment = (dynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);//保证偏移量是2^n
 	 }
 
-	 modelManager->setOffest(dynamicAlignment); //设定modelmanager的dynamicbuffer的offset；
+	 modelManager->setOffest(static_cast<uint32_t> (dynamicAlignment)); //设定modelmanager的dynamicbuffer的offset；
 
 	 size_t bufferSize = dynamicAlignment * MAX_NUM_OBJECT;
 
@@ -748,19 +751,33 @@ float VulkanCore::getAspectRatio()
 	 allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	 allocInfo.descriptorPool = descriptorPool;
 	 allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	 allocInfo.pSetLayouts = layouts_.data();
+	 allocInfo.pSetLayouts = &descriptorSetLayout;
 	 descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-
-	 VkDescriptorSetAllocateInfo TextureAllocInfo{};
-	 allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	 allocInfo.descriptorPool = TextureDescriptorPool;
-	 allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	 allocInfo.pSetLayouts = layouts_.data();
-	 TextureDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-
 	 VK_CHECK(vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()))
-	 VK_CHECK(vkAllocateDescriptorSets(device, &TextureAllocInfo, descriptorSets.data()))
-	 for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+
+	 VkDescriptorSetAllocateInfo TextureUBOAllocInfo{};
+	 TextureUBOAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	 TextureUBOAllocInfo.descriptorPool = TextureDescriptorPool;
+	 TextureUBOAllocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	 TextureUBOAllocInfo.pSetLayouts = &materialParaSetLayout;
+	 TextureUBODescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+	 VK_CHECK(vkAllocateDescriptorSets(device, &TextureUBOAllocInfo, TextureUBODescriptorSets.data()))
+
+	 for (auto& [MaterialID, MaterialViewer] : materialManager->getMaterialViewers()) {
+		 VkDescriptorSetAllocateInfo TextureAllocInfo{};
+		 TextureAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		 TextureAllocInfo.descriptorPool = TextureDescriptorPool;
+		 TextureAllocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+		 TextureAllocInfo.pSetLayouts = &materialSetLayout;
+		 TextureDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+		 VK_CHECK(vkAllocateDescriptorSets(device, &TextureAllocInfo, TextureDescriptorSets.data()))
+	 	 MaterialViewer->setDescriptorSets(TextureDescriptorSets);
+	 }
+
+
+
+
+	 for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		 VkDescriptorBufferInfo bufferInfo{};
 		 bufferInfo.buffer = uniformBuffers[i];
 		 bufferInfo.offset = 0;
@@ -796,29 +813,34 @@ float VulkanCore::getAspectRatio()
 
 		 vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 
-
+		 //上传材质的UBO以及材质的imageviewer
 		 VkDescriptorBufferInfo Texture_dynamic_bufferInfo{};
 		 dynamic_bufferInfo.buffer = Texture_dynamic_uniformBuffers[i];
 		 dynamic_bufferInfo.offset = 0;
 		 dynamic_bufferInfo.range = modelManager->getOffeset();//是单段大小
 
-		 std::array<VkWriteDescriptorSet, 2> TextureDescriptorWrites{};
-		 TextureDescriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		 TextureDescriptorWrites[0].dstSet = TextureDescriptorSets[i];
-		 TextureDescriptorWrites[0].dstBinding = 0;
-		 TextureDescriptorWrites[0].dstArrayElement = 0;
-		 TextureDescriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-		 TextureDescriptorWrites[0].descriptorCount = 1;
-		 TextureDescriptorWrites[0].pBufferInfo = &Texture_dynamic_bufferInfo;
+	 	VkWriteDescriptorSet TextureUBOWrites{};
+		 TextureUBOWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		 TextureUBOWrites.dstSet = TextureDescriptorSets[i];
+		 TextureUBOWrites.dstBinding = 0;
+		 TextureUBOWrites.dstArrayElement = 0;
+		 TextureUBOWrites.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+		 TextureUBOWrites.descriptorCount = 1;
+		 TextureUBOWrites.pBufferInfo = &Texture_dynamic_bufferInfo;
+		 vkUpdateDescriptorSets(device, 1, &TextureUBOWrites, 0, nullptr);
 
-		 //TODO:将所有需要创建布局的材质布局都update
-		 TextureDescriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		 TextureDescriptorWrites[1].dstSet = TextureDescriptorSets[i];
-		 TextureDescriptorWrites[1].dstBinding = 1;
-		 TextureDescriptorWrites[1].dstArrayElement = 0;
-		 TextureDescriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		 TextureDescriptorWrites[1].descriptorCount = 1;
-		 TextureDescriptorWrites[1].pImageInfo = &imageInfo;
+		 for (auto& [MaterialID, MaterialViewer] : materialManager->getMaterialViewers()) {
+			 //TODO:将所有需要创建布局的材质布局都update
+			 VkWriteDescriptorSet TextureDescriptorWrites{};
+			 TextureDescriptorWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			 TextureDescriptorWrites.dstSet = MaterialViewer->getDescriptorSet(i);
+			 TextureDescriptorWrites.dstBinding = 1;
+			 TextureDescriptorWrites.dstArrayElement = 0;
+			 TextureDescriptorWrites.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			 TextureDescriptorWrites.descriptorCount = 1;
+			 TextureDescriptorWrites.pImageInfo = &imageInfo;
+			 vkUpdateDescriptorSets(device, 1, &TextureDescriptorWrites, 0, nullptr);
+		 }
 	 }
  }
 
@@ -942,8 +964,8 @@ float VulkanCore::getAspectRatio()
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
-	pipelineLayoutInfo.pSetLayouts = layouts.data();
+	pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts_.size());
+	pipelineLayoutInfo.pSetLayouts = layouts_.data();
 
 	VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout))
 
@@ -1022,37 +1044,41 @@ float VulkanCore::getAspectRatio()
 
  void VulkanCore::createTextureImage()
 {
-	int texWidth, texHeight, texChannels;//纹理图片的信息读取
-	stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-	VkDeviceSize imageSize = static_cast<VkDeviceSize>(texWidth) * texHeight * 4;
-	mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
-	if (!pixels) {
-		throw std::runtime_error("failed to load texture image!");
-	}
+	//int texWidth, texHeight, texChannels;//纹理图片的信息读取
+	//stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+	//VkDeviceSize imageSize = static_cast<VkDeviceSize>(texWidth) * texHeight * 4;
+	//mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+	//if (!pixels) {
+	//	throw std::runtime_error("failed to load texture image!");
+	//}
 
-	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
-	createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+	//VkBuffer stagingBuffer;
+	//VkDeviceMemory stagingBufferMemory;
+	//createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
-	void* data;
-	vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
-	memcpy(data, pixels, static_cast<size_t>(imageSize));
-	vkUnmapMemory(device, stagingBufferMemory);
-	stbi_image_free(pixels);
+	//void* data;
+	//vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
+	//memcpy(data, pixels, static_cast<size_t>(imageSize));
+	//vkUnmapMemory(device, stagingBufferMemory);
+	//stbi_image_free(pixels);
 
-	createImage(texWidth, texHeight, mipLevels, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,VK_IMAGE_USAGE_TRANSFER_SRC_BIT | 
-		VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
-		textureImage, textureImageMemory);
-	transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, 
-		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
-	copyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-	//
-	//transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);
+	//createImage(texWidth, texHeight, mipLevels, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,VK_IMAGE_USAGE_TRANSFER_SRC_BIT | 
+	//	VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+	//	textureImage, textureImageMemory);
+	//transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, 
+	//	VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
+	//copyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+	////
+	////transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);
 
-	generateMipmaps(textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevels);//生成贴图对应的mipmap
+	//generateMipmaps(textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevels);//生成贴图对应的mipmap
 
-	vkDestroyBuffer(device, stagingBuffer, nullptr);
-	vkFreeMemory(device, stagingBufferMemory, nullptr);
+	//vkDestroyBuffer(device, stagingBuffer, nullptr);
+	//vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+	 for (auto path : TEXTURE_PATH) {
+		 materialManager->loadTextureImage(path);
+	 }
 }
 
  void VulkanCore::createTextureImageView()
@@ -1154,11 +1180,6 @@ float VulkanCore::getAspectRatio()
 	//vkDestroyBuffer(device, stagingBuffer, nullptr);
 	//vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
-
-
-
-
-
 
 
 void VulkanCore::createCommandBuffers()
@@ -1798,7 +1819,7 @@ void VulkanCore::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32
 		scissor.offset = { 0, 0 };
 		scissor.extent = swapChainExtent;
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
+		int num = 0;
 		for (auto& [meshID, mesh] : *modelManager->getMeshs()) {
 			VkBuffer vertexBuffers[] = { bufferManager->getBuffer(mesh->getVertexBufferId()).buffer };
 			VkDeviceSize offsets[] = { 0 };
@@ -1808,8 +1829,12 @@ void VulkanCore::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32
 
 			for (uint32_t modelInstanceID : modelManager->getModelBindMesh(meshID)) {
 				std::vector<uint32_t> dynamic_uniformOffset = { modelManager->getModelInstanceByID(modelInstanceID)->uniformOffset };
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 1, dynamic_uniformOffset.data());
 
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, 
+					&descriptorSets[currentFrame], 1, dynamic_uniformOffset.data());
+
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 1, 1,
+					materialManager->getMaterialViewer(num)->getDescriptorSet(currentFrame), 1, dynamic_uniformOffset.data());
 				vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(modelManager->getMesh(meshID)->getIndices().size()), 1, 0, 0, 0);
 			}
 

@@ -1,11 +1,11 @@
 #version 450
 
-layout(binding = 0) uniform UniformBufferObject {
+layout(set = 0, binding = 0) uniform UniformBufferObject {
     mat4 view;
     mat4 proj;
 } ubo;
 
-layout(binding = 1) uniform dynamic_UniformBufferObject {
+layout(set = 0, binding = 1) uniform dynamic_UniformBufferObject {
     mat4 model;
 } dynamic_ubo;
 

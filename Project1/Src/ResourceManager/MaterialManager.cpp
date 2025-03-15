@@ -1,9 +1,10 @@
 #define STB_IMAGE_IMPLEMENTATION
+#include <stb_image/stb_image.h>
 #include "ResourceManager/MaterialManager.h"
 
 #include <iostream>
 #include <ostream>
-#include <stb_image/stb_image.h>
+
 
 MaterialManager::MaterialManager(BufferManager& bufferManager):bufferManager(bufferManager)
 {
@@ -12,47 +13,42 @@ MaterialManager::MaterialManager(BufferManager& bufferManager):bufferManager(buf
 	MaterialViewerID = -1;
 }
 
-void MaterialManager::loadTextureImage(std::vector<std::string> ImagePaths)
+void MaterialManager::loadTextureImage(std::string path)
 {
-	for (auto path : ImagePaths)
-	{
-		uint32_t textureId = ImageTextureIDGenerator();
-		int texWidth, texHeight, texChannels;//纹理图片的信息读取
-		stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-		VkDeviceSize imageSize = static_cast<VkDeviceSize>(texWidth) * texHeight * 4;
-		uint32_t mipLevel = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
-		bufferManager.createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-		bufferManager.copyFromStagingBuffer(stagingBufferMemory, pixels, static_cast<size_t>(imageSize));
+	uint32_t textureId = ImageTextureIDGenerator();
+	int texWidth, texHeight, texChannels;//纹理图片的信息读取
+	stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+	VkDeviceSize imageSize = static_cast<VkDeviceSize>(texWidth) * texHeight * 4;
+	uint32_t mipLevel = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+	VkBuffer stagingBuffer;
+	VkDeviceMemory stagingBufferMemory;
+	bufferManager.createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+	bufferManager.copyFromStagingBuffer(stagingBufferMemory, pixels, static_cast<size_t>(imageSize));
 
-		stbi_image_free(pixels);
+	stbi_image_free(pixels);
 
-		bufferManager.createImage(texWidth, texHeight, mipLevel, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
-			VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			TextureImages[textureId], TextureImageMemorys[textureId]);
+	bufferManager.createImage(texWidth, texHeight, mipLevel, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+		VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		TextureImages[textureId], TextureImageMemorys[textureId]);
 
-		bufferManager.copyBufferToImage(stagingBuffer, TextureImages[textureId], static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-		//
-		//transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);
+	bufferManager.copyBufferToImage(stagingBuffer, TextureImages[textureId], static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+	//
+	//transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);
 
-		bufferManager.generateMipmaps(TextureImages[textureId], VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevel);//生成贴图对应的mipmap
+	bufferManager.generateMipmaps(TextureImages[textureId], VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevel);//生成贴图对应的mipmap
 
-		vkDestroyBuffer(bufferManager.getDevice(), stagingBuffer, nullptr);
-		vkFreeMemory(bufferManager.getDevice(), stagingBufferMemory, nullptr);
+	vkDestroyBuffer(bufferManager.getDevice(), stagingBuffer, nullptr);
+	vkFreeMemory(bufferManager.getDevice(), stagingBufferMemory, nullptr);
 
-		VkImageView Imageview = bufferManager.createImageView(TextureImages[textureId], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, mipLevel);
+	VkImageView Imageview = bufferManager.createImageView(TextureImages[textureId], VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, mipLevel);
 
-		uint32_t ImageViewerID = ImageViewerIDGenerator();
+	uint32_t ImageViewerID = ImageViewerIDGenerator();
 
-		materialViewers[ImageViewerID] = std::make_shared < MaterialViewer >(Imageview, mipLevel);
-		createTextureSampler(ImageViewerID);
-
-
-
-	}
-
+	materialViewers[ImageViewerID] = std::make_shared < MaterialViewer >(Imageview, mipLevel);
+	createTextureSampler(ImageViewerID);
+	uint32_t materialId = MaterialIDGenerator();
+	materials[textureId] = std::make_shared< Material>(materialId, BasicDynamicOffset * materialId, materialViewers[ImageViewerID]);
 }
 
 
@@ -65,6 +61,12 @@ uint32_t MaterialManager::ImageTextureIDGenerator()
 uint32_t MaterialManager::ImageViewerIDGenerator()
 {
 	MaterialViewerID += 1;
+	return MaterialViewerID;
+}
+
+uint32_t MaterialManager::MaterialIDGenerator()
+{
+	MaterialID += 1;
 	return MaterialViewerID;
 }
 
