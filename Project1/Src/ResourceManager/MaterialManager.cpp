@@ -24,7 +24,8 @@ void MaterialManager::loadTextureImage(std::string path)
 	VkDeviceMemory stagingBufferMemory;
 	bufferManager.createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-	bufferManager.copyFromStagingBuffer(stagingBufferMemory, pixels, static_cast<size_t>(imageSize));
+
+	bufferManager.copyFromStagingBuffer(stagingBufferMemory, pixels, static_cast<size_t>(imageSize), 0, 0);
 
 	stbi_image_free(pixels);
 
@@ -32,6 +33,8 @@ void MaterialManager::loadTextureImage(std::string path)
 		VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 		TextureImages[textureId], TextureImageMemorys[textureId]);
 
+	bufferManager.transitionImageLayout(TextureImages[textureId], VK_FORMAT_R8G8B8A8_SRGB,
+		VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevel);
 	bufferManager.copyBufferToImage(stagingBuffer, TextureImages[textureId], static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 	//
 	//transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);

@@ -172,6 +172,8 @@ void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 	
 	createGraphicsPipeline_Rasterizer();
 
+	createCommandPool();
+	createCommandBuffers();
 	createTextureImage();
 	//createTextureImageView();
 	//createTextureSampler();
@@ -181,9 +183,10 @@ void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 
 	createDescriptorSets();
 
-	createCommandPool();
+
 	createDepthResources();
 	createFramebuffers();
+
 
 
 
@@ -193,7 +196,7 @@ void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 	createIndexBuffer();
 
 
-	createCommandBuffers();
+
 	createSyncObjects();
 	
 }
@@ -631,6 +634,7 @@ float VulkanCore::getAspectRatio()
 	TextureLayoutInfo.pBindings = &samplerLayoutBinding;
 	VK_CHECK(vkCreateDescriptorSetLayout(device, &TextureLayoutInfo, nullptr, &materialSetLayout))
 
+
 	VkDescriptorSetLayoutBinding MaterialUboLayoutBinding{};
 	MaterialUboLayoutBinding.binding = 0;
 	MaterialUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
@@ -783,10 +787,6 @@ float VulkanCore::getAspectRatio()
 		 bufferInfo.offset = 0;
 		 bufferInfo.range = sizeof(UniformBufferObject);
 
-		 VkDescriptorImageInfo imageInfo{};
-		 imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		 imageInfo.imageView = textureImageView;
-		 imageInfo.sampler = textureSampler;
 
 		 VkDescriptorBufferInfo dynamic_bufferInfo{};
 		 dynamic_bufferInfo.buffer = dynamic_uniformBuffers[i];
@@ -815,13 +815,13 @@ float VulkanCore::getAspectRatio()
 
 		 //上传材质的UBO以及材质的imageviewer
 		 VkDescriptorBufferInfo Texture_dynamic_bufferInfo{};
-		 dynamic_bufferInfo.buffer = Texture_dynamic_uniformBuffers[i];
-		 dynamic_bufferInfo.offset = 0;
-		 dynamic_bufferInfo.range = modelManager->getOffeset();//是单段大小
+		 Texture_dynamic_bufferInfo.buffer = Texture_dynamic_uniformBuffers[i];
+		 Texture_dynamic_bufferInfo.offset = 0;
+		 Texture_dynamic_bufferInfo.range = modelManager->getOffeset();//是单段大小
 
 	 	VkWriteDescriptorSet TextureUBOWrites{};
 		 TextureUBOWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		 TextureUBOWrites.dstSet = TextureDescriptorSets[i];
+		 TextureUBOWrites.dstSet = TextureUBODescriptorSets[i];
 		 TextureUBOWrites.dstBinding = 0;
 		 TextureUBOWrites.dstArrayElement = 0;
 		 TextureUBOWrites.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
@@ -830,11 +830,17 @@ float VulkanCore::getAspectRatio()
 		 vkUpdateDescriptorSets(device, 1, &TextureUBOWrites, 0, nullptr);
 
 		 for (auto& [MaterialID, MaterialViewer] : materialManager->getMaterialViewers()) {
+			 VkDescriptorImageInfo imageInfo{};
+			 imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			 imageInfo.imageView = MaterialViewer->getTextureImageView();
+			 imageInfo.sampler = MaterialViewer->getTextureSampler();
+
+
 			 //TODO:将所有需要创建布局的材质布局都update
 			 VkWriteDescriptorSet TextureDescriptorWrites{};
 			 TextureDescriptorWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			 TextureDescriptorWrites.dstSet = MaterialViewer->getDescriptorSet(i);
-			 TextureDescriptorWrites.dstBinding = 1;
+			 TextureDescriptorWrites.dstBinding = 0;
 			 TextureDescriptorWrites.dstArrayElement = 0;
 			 TextureDescriptorWrites.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			 TextureDescriptorWrites.descriptorCount = 1;
@@ -1015,7 +1021,7 @@ float VulkanCore::getAspectRatio()
 	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 	poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
 
-	VK_CHECK(vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool));
+	VK_CHECK(vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool))
 }
 
  void VulkanCore::createFramebuffers()
@@ -1192,7 +1198,7 @@ void VulkanCore::createCommandBuffers()
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
-	VK_CHECK(vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()));
+	VK_CHECK(vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()))
 }
 
 void VulkanCore::createSyncObjects()
@@ -1834,7 +1840,7 @@ void VulkanCore::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32
 					&descriptorSets[currentFrame], 1, dynamic_uniformOffset.data());
 
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 1, 1,
-					materialManager->getMaterialViewer(num)->getDescriptorSet(currentFrame), 1, dynamic_uniformOffset.data());
+					&materialManager->getMaterialViewer(num)->getDescriptorSet(currentFrame), 1, dynamic_uniformOffset.data());
 				vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(modelManager->getMesh(meshID)->getIndices().size()), 1, 0, 0, 0);
 			}
 

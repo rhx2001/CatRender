@@ -30,7 +30,7 @@ const bool enableValidationLayers = true;
 
 #define VK_CHECK(f) { VkResult res = (f); if (res != VK_SUCCESS) { std::cerr << "Fatal: VkResult is \"" << res << "\" in " << __FILE__ << " at line " << __LINE__ << std::endl; abort(); } }
 
-const std::vector < std::string > TEXTURE_PATH{ "textures/viking_room.png", "african_head_diffuse.tga" };
+const std::vector < std::string > TEXTURE_PATH{ "textures/viking_room.png", "textures/african_head_diffuse.tga" };
 
 const std::string MODEL_PATH = "models/viking_room.obj";
 const std::string MODEL_PATH2 = "models/african_head.obj";

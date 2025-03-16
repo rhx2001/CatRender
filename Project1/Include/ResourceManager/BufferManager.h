@@ -4,7 +4,7 @@
 #pragma once
 #include <unordered_map>
 #include <vulkan/vulkan_core.h>
-
+#include <stdexcept>
 #include "Mesh.h"
 
 
@@ -63,7 +63,7 @@ public:
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
 	template<typename T>
-	void copyFromStagingBuffer(VkDeviceMemory stageBufferMemory, T& data, uint32_t size);
+	void copyFromStagingBuffer(VkDeviceMemory& stageBufferMemory, T& data, uint32_t size, uint32_t offset, uint32_t flags);
 
 	void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format,
 		VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
@@ -78,10 +78,14 @@ public:
 };
 
 template<typename T>
-inline void BufferManager::copyFromStagingBuffer(VkDeviceMemory stageBufferMemory, T& data, uint32_t size)
+inline void BufferManager::copyFromStagingBuffer(VkDeviceMemory& stageBufferMemory, T& srcData, uint32_t size, uint32_t offset, uint32_t flags)
 {
 	void* mapData;
-	vkMapMemory(device_, stageBufferMemory, 0, size, 0, &mapData);
-	memcpy(mapData, &data, size);
+	VkResult result = vkMapMemory(device_, stageBufferMemory, offset, size, flags, &mapData);
+	if (result != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to map memory");
+	}
+	memcpy(mapData, srcData, size);
 	vkUnmapMemory(device_, stageBufferMemory);
 }
