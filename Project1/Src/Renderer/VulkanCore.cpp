@@ -751,28 +751,33 @@ float VulkanCore::getAspectRatio()
  {
 
 	 //创建DescriptorSets指定了将要绑定到描述符的实际缓冲区或图像资源
+	 std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
 	 VkDescriptorSetAllocateInfo allocInfo{};
 	 allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	 allocInfo.descriptorPool = descriptorPool;
 	 allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	 allocInfo.pSetLayouts = &descriptorSetLayout;
+	 allocInfo.pSetLayouts = layouts.data();
 	 descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
 	 VK_CHECK(vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()))
 
+
+
+	std::vector<VkDescriptorSetLayout> TextureUBOLayouts(MAX_FRAMES_IN_FLIGHT, materialParaSetLayout);
 	 VkDescriptorSetAllocateInfo TextureUBOAllocInfo{};
 	 TextureUBOAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	 TextureUBOAllocInfo.descriptorPool = TextureDescriptorPool;
 	 TextureUBOAllocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	 TextureUBOAllocInfo.pSetLayouts = &materialParaSetLayout;
+	 TextureUBOAllocInfo.pSetLayouts = TextureUBOLayouts.data();
 	 TextureUBODescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
 	 VK_CHECK(vkAllocateDescriptorSets(device, &TextureUBOAllocInfo, TextureUBODescriptorSets.data()))
 
 	 for (auto& [MaterialID, MaterialViewer] : materialManager->getMaterialViewers()) {
+		 std::vector<VkDescriptorSetLayout> TextureDescriptorLayouts(MAX_FRAMES_IN_FLIGHT, materialSetLayout);
 		 VkDescriptorSetAllocateInfo TextureAllocInfo{};
 		 TextureAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		 TextureAllocInfo.descriptorPool = TextureDescriptorPool;
 		 TextureAllocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-		 TextureAllocInfo.pSetLayouts = &materialSetLayout;
+		 TextureAllocInfo.pSetLayouts = TextureDescriptorLayouts.data();
 		 TextureDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
 		 VK_CHECK(vkAllocateDescriptorSets(device, &TextureAllocInfo, TextureDescriptorSets.data()))
 	 	 MaterialViewer->setDescriptorSets(TextureDescriptorSets);
@@ -1840,9 +1845,11 @@ void VulkanCore::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32
 					&descriptorSets[currentFrame], 1, dynamic_uniformOffset.data());
 
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 1, 1,
-					&materialManager->getMaterialViewer(num)->getDescriptorSet(currentFrame), 1, dynamic_uniformOffset.data());
+					&materialManager->getMaterialViewer(num++)->getDescriptorSet(currentFrame), 1, dynamic_uniformOffset.data());
+					num = num % 2;
 				vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(modelManager->getMesh(meshID)->getIndices().size()), 1, 0, 0, 0);
 			}
+			
 
 		}//gui render pass
 		vkCmdNextSubpass(commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
