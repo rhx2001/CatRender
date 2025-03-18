@@ -26,12 +26,14 @@ void ModelManager::createModelInstance()
 {
     uint32_t id = generateModelId();
     std::string name = "UnNamed" + std::to_string(id);
+	ModelInstanceNameMap[name] = id;
     bindModels[id] = std::make_shared<modelInstance>(glm::mat4(0), name, Basic_DynamicUniformBufferOffset * id);
 }
 
 void ModelManager::createModelInstance(std::string name)
 {
     uint32_t id = generateModelId();
+    ModelInstanceNameMap[name] = id;
     bindModels[id] = std::make_shared<modelInstance>(glm::mat4(0), name, Basic_DynamicUniformBufferOffset * id);
 }
 
@@ -39,22 +41,26 @@ void ModelManager::createModelInstance(uint32_t meshId)
 {
     uint32_t id = generateModelId();
     std::string name = "UnNamed" + std::to_string(id);
+    ModelInstanceNameMap[name] = id;
     bindModels[id] = std::make_shared<modelInstance>(glm::mat4(0), name, Basic_DynamicUniformBufferOffset * id);
     bindModels[id]->setMesh(meshId);
     bindModelMeshMap(id, meshId);
+
 }
 
 void ModelManager::createModelInstance(std::string name, uint32_t meshId)
 {
     uint32_t id = generateModelId();
+    ModelInstanceNameMap[name] = id;
     bindModels[id] = std::make_shared<modelInstance>(glm::mat4(0), name, Basic_DynamicUniformBufferOffset * id);
     bindModels[id]->setMesh(meshId);
-    bindModelMeshMap(id, meshId);
+	bindModelMeshMap(id, meshId);
 }
 
 void ModelManager::createModelInstance(std::string name, glm::mat4 transM)
 {
     uint32_t id = generateModelId();
+    ModelInstanceNameMap[name] = id;
     bindModels[id] = std::make_shared<modelInstance>(transM, name, Basic_DynamicUniformBufferOffset * id);
 }
 
@@ -62,25 +68,45 @@ void ModelManager::createModelInstance(glm::mat4 transM, uint32_t meshId)
 {
     uint32_t id = generateModelId();
     std::string name = "UnNamed" + std::to_string(id);
+    ModelInstanceNameMap[name] = id;
     bindModels[id] = std::make_shared<modelInstance>(transM, name, Basic_DynamicUniformBufferOffset * id);
     bindModels[id]->setMesh(meshId);
     bindModelMeshMap(id, meshId);
+
+}
+
+void ModelManager::createModelInstance(uint32_t meshId, uint32_t materialId)
+{
+    uint32_t id = generateModelId();
+    std::string name = "UnNamed" + std::to_string(id);
+    ModelInstanceNameMap[name] = id;
+    bindModels[id] = std::make_shared<modelInstance>(glm::mat4(0), name, Basic_DynamicUniformBufferOffset * id);
+    bindModels[id]->setMesh(meshId);
+    m_materialManager->setMaterialMeshMap(materialId, meshId);
+    bindModelMeshMap(id, meshId);
+
 }
 
 void ModelManager::createModelInstance(std::string name, glm::mat4 transM, uint32_t meshId)
 {
     uint32_t id = generateModelId();
+    ModelInstanceNameMap[name] = id;
     bindModels[id] = std::make_shared<modelInstance>(transM, name, Basic_DynamicUniformBufferOffset * id);
     bindModels[id]->setMesh(meshId);
     bindModelMeshMap(id, meshId);
+
 }
 
 void ModelManager::createModelInstance(std::string name, glm::mat4 transM, uint32_t meshId, uint32_t materialId)
 {
     uint32_t id = generateModelId();
+    ModelInstanceNameMap[name] = id;
     bindModels[id] = std::make_shared<modelInstance>(transM, name, Basic_DynamicUniformBufferOffset * id);
     bindModels[id]->setMesh(meshId);
+	bindModels[id]->setMaterialID(materialId);
+    m_materialManager->setMaterialMeshMap(materialId, meshId);
     bindModelMeshMap(id, meshId);
+
 }
 
 uint32_t ModelManager::generateModelId()
@@ -94,12 +120,9 @@ void ModelManager::bindModelMeshMap(uint32_t modelID, uint32_t meshId)
     {
         ModelBindMeshMap[meshId] = std::vector<uint32_t>{ modelID };
     }
-
-    // 如果没有找到，创建一个新的unordered_map并添加
-    if (!found) {
-        std::unordered_map<uint32_t, std::vector<uint32_t>> newMaterialMap;
-        newMaterialMap[materialID] = { modelID };
-        materialMaps.push_back(newMaterialMap);
+    else
+    {
+		ModelBindMeshMap[meshId].push_back(modelID);
     }
 }
 

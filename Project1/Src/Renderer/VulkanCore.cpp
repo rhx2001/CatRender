@@ -13,13 +13,15 @@ VulkanCore::VulkanCore()
 {
 	currentFrame = 0;
 	camera = new Camera();
-	modelManager = std::make_unique<ModelManager>();
 	bufferManager = std::make_unique<BufferManager>(device, physicalDevice, commandPool, graphicsQueue);
-	materialManager = std::make_unique<MaterialManager>(*bufferManager);
+	materialManager = std::make_shared<MaterialManager>(*bufferManager);
+	modelManager = std::make_unique<ModelManager>(materialManager);
 }
 
 VulkanCore::~VulkanCore()
 {
+	modelManager.reset();
+	materialManager.reset();
 	bufferManager.reset();
 	delete camera;
 	vkDeviceWaitIdle(device);
@@ -57,6 +59,8 @@ VulkanCore::~VulkanCore()
 		vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 	}
 
+	vkDestroyDescriptorSetLayout(device, materialParaSetLayout, nullptr);
+	vkDestroyDescriptorSetLayout(device, materialSetLayout, nullptr);
 	// 4. 销毁交换链相关资源
 	for (auto& framebuffer : SwapChainFramebuffers) {
 		vkDestroyFramebuffer(device, framebuffer, nullptr);
@@ -126,6 +130,12 @@ VulkanCore::~VulkanCore()
 		vkFreeMemory(device, dynamic_uniformBuffersMemory[i], nullptr);
 	}
 
+	for (size_t i = 0; i < Texture_dynamic_uniformBuffers.size(); i++) {
+		vkDestroyBuffer(device, Texture_dynamic_uniformBuffers[i], nullptr);
+		vkFreeMemory(device, Texture_dynamic_uniformBuffersMemory[i], nullptr);
+	}
+
+
 	// 9. 销毁逻辑设备
 	if (device != VK_NULL_HANDLE) {
 		vkDestroyDevice(device, nullptr);
@@ -142,7 +152,6 @@ VulkanCore::~VulkanCore()
 			func(instance, debugMessenger, nullptr);
 		}
 	}
-
 
 
 }
@@ -685,6 +694,7 @@ float VulkanCore::getAspectRatio()
 	TexturePoolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * 2 * TEXTURE_NUM);
 	VK_CHECK(vkCreateDescriptorPool(device, &TexturePoolInfo, nullptr, &TextureDescriptorPool))
 
+	materialManager->setDescriptorPool(TextureDescriptorPool);
 
  }
 
@@ -1127,11 +1137,11 @@ float VulkanCore::getAspectRatio()
 	 modelManager->LoadMeshs(PATHS);
 	for (int i=0;i<5;i++)
 	{
-		modelManager->createModelInstance(0);
+		modelManager->createModelInstance(0, 0);
 	}
 	for (int i = 0; i < 5; i++)
 	{
-		modelManager->createModelInstance(1);
+		modelManager->createModelInstance(1, 1);
 	}
 
 }
@@ -1831,26 +1841,32 @@ void VulkanCore::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32
 		scissor.extent = swapChainExtent;
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 		int num = 0;
-		for (auto& [meshID, mesh] : *modelManager->getMeshs()) {
-			VkBuffer vertexBuffers[] = { bufferManager->getBuffer(mesh->getVertexBufferId()).buffer };
-			VkDeviceSize offsets[] = { 0 };
-			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+		//渲染texture阶段
+		for (auto& [MaterialID, meshIDVec] : materialManager->getMaterialMeshMap()) {
+			//绑定material对应的descriptorSet,这部分对应的是texture
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 1, 1,
+				&materialManager->getMaterialViewer(MaterialID)->getDescriptorSet(static_cast<uint32_t>(currentFrame)), 0,nullptr);
+			//
+			std::array<uint32_t, 1> MaterialOffset = { materialManager->getMaterial(MaterialID)->getOffset() };
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 2, 1,
+				&TextureUBODescriptorSets[currentFrame], 1, MaterialOffset.data());
+			//mesh渲染阶段
+			for (auto MeshID : meshIDVec) {
+				auto mesh = modelManager->getMesh(MeshID);
+					VkBuffer vertexBuffers[] = { bufferManager->getBuffer(mesh->getVertexBufferId()).buffer };
+					VkDeviceSize offsets[] = { 0 };
+					vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-			vkCmdBindIndexBuffer(commandBuffer, bufferManager->getBuffer(mesh->getIndexBufferId()).buffer, 0, VK_INDEX_TYPE_UINT32);
+					vkCmdBindIndexBuffer(commandBuffer, bufferManager->getBuffer(mesh->getIndexBufferId()).buffer, 0, VK_INDEX_TYPE_UINT32);
 
-			for (uint32_t modelInstanceID : modelManager->getModelBindMesh(meshID)) {
-				std::vector<uint32_t> dynamic_uniformOffset = { modelManager->getModelInstanceByID(modelInstanceID)->uniformOffset };
-
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, 
-					&descriptorSets[currentFrame], 1, dynamic_uniformOffset.data());
-
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 1, 1,
-					&materialManager->getMaterialViewer(num++)->getDescriptorSet(currentFrame), 1, dynamic_uniformOffset.data());
-					num = num % 2;
-				vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(modelManager->getMesh(meshID)->getIndices().size()), 1, 0, 0, 0);
+					for (uint32_t modelInstanceID : modelManager->getModelBindMesh(MeshID)) {
+						std::vector<uint32_t> dynamic_uniformOffset = { modelManager->getModelInstanceByID(modelInstanceID)->uniformOffset };
+						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
+							&descriptorSets[currentFrame], 1, dynamic_uniformOffset.data());
+						vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(modelManager->getMesh(MeshID)->getIndices().size()), 1, 0, 0, 0);
+					}
+				
 			}
-			
-
 		}//gui render pass
 		vkCmdNextSubpass(commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 		// GUI 新帧

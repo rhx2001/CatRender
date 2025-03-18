@@ -13,6 +13,32 @@ MaterialManager::MaterialManager(BufferManager& bufferManager):bufferManager(buf
 	MaterialViewerID = -1;
 }
 
+MaterialManager::~MaterialManager()
+{
+	for (auto& pair : TextureImages)
+	{
+		vkDestroyImage(bufferManager.getDevice(), pair.second, nullptr);
+	}
+	for (auto& pair : TextureImageMemorys)
+	{
+		vkFreeMemory(bufferManager.getDevice(), pair.second, nullptr);
+	}
+	for (auto& pair : materialViewers)
+	{
+		vkDestroyImageView(bufferManager.getDevice(), pair.second->getTextureImageView(), nullptr);
+		vkDestroySampler(bufferManager.getDevice(), pair.second->getTextureSampler(), nullptr);
+		//vkFreeDescriptorSets(bufferManager.getDevice(), descriptorPool, pair.second->getDescriptorSets().size(), pair.second->getDescriptorSets().data());
+
+	}
+
+
+	for (auto& pair : materials)
+	{
+		//vkDestroyDescriptorSetLayout(bufferManager.getDevice(), pair.second->getDescriptorSetLayout(), nullptr);
+	}
+	vkDestroyDescriptorPool(bufferManager.getDevice(), descriptorPool, nullptr);
+}
+
 void MaterialManager::loadTextureImage(std::string path)
 {
 	uint32_t textureId = ImageTextureIDGenerator();
@@ -54,6 +80,18 @@ void MaterialManager::loadTextureImage(std::string path)
 	materials[textureId] = std::make_shared< Material>(materialId, BasicDynamicOffset * materialId, materialViewers[ImageViewerID]);
 }
 
+
+void MaterialManager::setMaterialMeshMap(uint32_t materialID, uint32_t meshID)
+{
+	if (MaterialBindMeshMap.find(meshID) == MaterialBindMeshMap.end())
+	{
+		MaterialBindMeshMap[materialID] = std::vector<uint32_t>{ meshID };
+	}
+	else
+	{
+		MaterialBindMeshMap[materialID].push_back(meshID);
+	}
+}
 
 uint32_t MaterialManager::ImageTextureIDGenerator()
 {

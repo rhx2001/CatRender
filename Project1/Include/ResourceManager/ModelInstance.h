@@ -13,6 +13,7 @@ public:
 	void updateUniforms();
 	//TODO：将unifrom的更新放到这里
 	void setMesh(uint32_t MeshID) { meshBindID = MeshID; }
+	void setMaterialID(uint32_t materialID) { materialBindID = materialID; }
 
 public:
 	glm::mat4 transM;//变化矩阵
@@ -21,6 +22,6 @@ public:
 
 private:
 	uint32_t meshBindID = 0;
-	
+	uint32_t materialBindID = 0;
 
 };

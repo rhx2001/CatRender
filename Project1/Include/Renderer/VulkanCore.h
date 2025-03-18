@@ -213,7 +213,7 @@ private:
 
     std::unique_ptr<BufferManager> bufferManager;
 
-    std::unique_ptr<MaterialManager> materialManager;
+    std::shared_ptr<MaterialManager> materialManager;
 
 
 private:

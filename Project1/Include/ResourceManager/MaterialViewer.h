@@ -24,6 +24,7 @@ public:
 	void setDescriptorSets(const std::vector<VkDescriptorSet>& descriptorSets) { m_descriptorSets = descriptorSets; }
 
 	VkDescriptorSet& getDescriptorSet(uint32_t FRAME_IN_FLIGHT) { return m_descriptorSets[FRAME_IN_FLIGHT]; }
+	std::vector<VkDescriptorSet>& getDescriptorSets() { return m_descriptorSets; }
 	VkSampler getTextureSampler() const { return t_TextureSampler; }
 	VkImageView getTextureImageView() const { return TextureImageView; }
 	uint32_t getMipLevels() const { return mipLevels; }
