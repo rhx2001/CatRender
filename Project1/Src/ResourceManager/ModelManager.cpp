@@ -94,9 +94,12 @@ void ModelManager::bindModelMeshMap(uint32_t modelID, uint32_t meshId)
     {
         ModelBindMeshMap[meshId] = std::vector<uint32_t>{ modelID };
     }
-    else
-    {
-        ModelBindMeshMap[meshId].push_back(modelID);
+
+    // 如果没有找到，创建一个新的unordered_map并添加
+    if (!found) {
+        std::unordered_map<uint32_t, std::vector<uint32_t>> newMaterialMap;
+        newMaterialMap[materialID] = { modelID };
+        materialMaps.push_back(newMaterialMap);
     }
 }
 
