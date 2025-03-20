@@ -1860,7 +1860,7 @@ void VulkanCore::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32
 					vkCmdBindIndexBuffer(commandBuffer, bufferManager->getBuffer(mesh->getIndexBufferId()).buffer, 0, VK_INDEX_TYPE_UINT32);
 
 					for (uint32_t modelInstanceID : modelManager->getModelBindMesh(MeshID)) {
-						std::vector<uint32_t> dynamic_uniformOffset = { modelManager->getModelInstanceByID(modelInstanceID)->uniformOffset };
+						std::vector<uint32_t> dynamic_uniformOffset = { modelManager->getModelInstanceByID(modelInstanceID)->getOffset() };
 						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
 							&descriptorSets[currentFrame], 1, dynamic_uniformOffset.data());
 						vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(modelManager->getMesh(MeshID)->getIndices().size()), 1, 0, 0, 0);
@@ -1908,17 +1908,24 @@ void VulkanCore::updateUniformBuffer_dynamic(size_t currentImage) const
 	float deltaTime = std::chrono::duration<float>(currentTime - prevTime).count();
 	prevTime = currentTime;
 
-	camera->update(deltaTime); // 先更新摄像头状态
 	float num = 10.0f;
 
 	for (auto& [modelID, modelInstance ] : modelManager->getModelInstances()) {
 
 		dynamic_UniformBufferObject ubo{};
-		//ubo.model = modelInstance->transM;
-		modelInstance->transM = glm::translate(glm::mat4(1.0f), glm::vec3(static_cast<float>(sin(num)), glm::cos(num), 0.0f));
-		ubo.model = modelInstance->transM;
+		modelInstance->setScale(glm::vec3(1.0f));
+		std::cout << modelInstance->getScale().x << " " << modelInstance->getScale().y << " " << modelInstance->getScale().z << std::endl;
+		modelInstance->setPosition(glm::vec3(static_cast<float>(sin(num)), glm::cos(num), 0.0f));
+		// 正确顺序：
 
-		char* data = static_cast<char*>(dynamic_uniformBuffersMapped[currentImage]) + modelInstance->uniformOffset;
+		glm::mat4 TransM = glm::mat4(1.0f); // 初始化为单位矩阵
+		TransM = glm::translate(TransM, modelInstance->getPosition());
+		//TransM = glm::rotate(TransM, glm::radians(90.0f), modelInstance->getRotation());
+		TransM = glm::scale(TransM, modelInstance->getScale());
+
+		modelInstance->transM = TransM;
+		ubo.model = TransM;
+		char* data = static_cast<char*>(dynamic_uniformBuffersMapped[currentImage]) + modelInstance->getOffset();
 		memcpy(data, &ubo, sizeof(ubo));
 		num += time;
 	}

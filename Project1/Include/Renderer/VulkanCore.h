@@ -84,6 +84,8 @@ public:
 
     float getAspectRatio();
 
+	ModelManager& getModelManager() const { return *modelManager; }
+
 public:
 
     struct QueueFamilyIndices {
@@ -238,7 +240,6 @@ private:
 
 	void createUniformBuffers();
     void createDynamicUniformBuffers();
-    void createModelInstance();
 
     void createDescriptorPool();
     void createDescriptorSets();

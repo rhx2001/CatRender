@@ -4,7 +4,7 @@
 #include "Gui/imgui_impl_vulkan.h"
 #include "Renderer/VulkanCore.h"
 
-GUIManager::GUIManager(){};
+GUIManager::GUIManager(){}
 
 GUIManager::~GUIManager()
 {
@@ -95,7 +95,19 @@ void GUIManager::BeginFrame() {
     {
         camera->setRotation(rotation);
     }
-  
+
+	auto& modelInstances = m_VulkanCore->getModelManager().getModelInstances();
+	if (ImGui::CollapsingHeader("Models")) {
+		for (auto& [modelID, modelInstance] : modelInstances) {
+			if (ImGui::TreeNode(modelInstance->name.c_str())) {
+				ImGui::Text("Model ID: %d", modelID);
+				ImGui::Text("Position: (%.2f, %.2f, %.2f)", modelInstance->getPosition().x, modelInstance->getPosition().y, modelInstance->getPosition().z);
+				ImGui::Text("Rotation: (%.2f, %.2f, %.2f)", modelInstance->getRotation().x, modelInstance->getRotation().y, modelInstance->getRotation().z);
+				ImGui::Text("Scale: (%.2f, %.2f, %.2f)", modelInstance->getScale().x, modelInstance->getScale().y, modelInstance->getScale().z);
+				ImGui::TreePop();
+			}
+		}
+	}
 
 
 	ImGui::End();
@@ -129,24 +141,24 @@ void GUIManager::cleanup()
 void GUIManager::CreateDescriptorPool()
 {
     VkDescriptorPoolSize pool_sizes[] = {
-    { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-    { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-    { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
-    { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-    { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
-    { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-    { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-    { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-    { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-    { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-    { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+    { VK_DESCRIPTOR_TYPE_SAMPLER, 500 },
+    { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 500 },
+    { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 500 },
+    { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 500 },
+    { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 500 },
+    { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 500 },
+    { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 500 },
+    { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 500 },
+    { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 500 },
+    { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 500 },
+    { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 500 }
     };
 
     VkDescriptorPoolCreateInfo pool_info = {};
     pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-    pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
-    pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
+    pool_info.maxSets = 500 * IM_ARRAYSIZE(pool_sizes);
+    pool_info.poolSizeCount = static_cast<uint32_t>(IM_ARRAYSIZE(pool_sizes));
     pool_info.pPoolSizes = pool_sizes;
     VK_CHECK(vkCreateDescriptorPool(m_VulkanCore->getDevice(), &pool_info, nullptr, &m_DescriptorPool))
 }
