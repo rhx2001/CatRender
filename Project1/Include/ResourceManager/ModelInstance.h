@@ -1,6 +1,10 @@
 #pragma once
+#define GLM_ENABLE_EXPERIMENTAL
+#include <iostream>
+#include <ostream>
 #include <glm/glm.hpp>
 #include <string>
+#include <glm/gtx/string_cast.hpp>
 #include <ResourceManager/Mesh.h>
 
 class modelInstance
@@ -8,17 +12,18 @@ class modelInstance
 public:
 	modelInstance()
 	{
-		position = glm::vec3(0.0f);
-		rotation = glm::vec3(0.0f);
-		scale = glm::vec3(1.0f);
-		transM = glm::mat4(1.0f);//变化矩阵
+		this->position = glm::vec3(0.0f);
+		this->rotation = glm::vec3(0.0f);
+		this->scale = glm::vec3(1.0f);
+		this->transM = glm::mat4(1.0f);//变化矩阵
 	}
 	modelInstance(glm::mat4 model, std::string name, uint32_t uniformOffset)
-		: transM(model), name(name), uniformOffset(uniformOffset)
+		: transM(model),position(glm::vec3(0.0f)),rotation(glm::vec3(0.0f)),scale(glm::vec3(1.0f)), name(name), uniformOffset(uniformOffset)
 	{
-		position = glm::vec3(0.0f);
-		rotation = glm::vec3(0.0f);
-		scale = glm::vec3(1.0f);
+		std::cout << "modelInstance created: " << name << std::endl;
+		std::cout << "position: " << glm::to_string(position) << std::endl;
+		std::cout << "rotation: " << glm::to_string(rotation) << std::endl;
+		std::cout << "scale: " << glm::to_string(scale) << std::endl;
 	}
 	//~modelInstance();
 	void updateUniforms();
@@ -39,15 +44,19 @@ public:
 
 
 	uint32_t getOffset() const { return uniformOffset; }
-public:
-	glm::mat4 transM = glm::mat4(1.0f);//变化矩阵
-	std::string name;
 
+public:
+	alignas(16)glm::mat4 transM;//变化矩阵
 private:
-	uint32_t meshBindID = 0;
-	uint32_t materialBindID = 0;
+	alignas(16)glm::vec3 position;
+	alignas(16)glm::vec3 rotation;
+	alignas(16)glm::vec3 scale;
+public:
+	std::string name;
+private:
+	uint32_t meshBindID;
+	uint32_t materialBindID;
 	uint32_t uniformOffset;  // 在Uniform Buffer中的偏移量
-	glm::vec3 position = glm::vec3(0.0f);
-	glm::vec3 rotation = glm::vec3(0.0f);
-	glm::vec3 scale = glm::vec3(1.0f);
+
+
 };

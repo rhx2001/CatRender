@@ -1913,15 +1913,13 @@ void VulkanCore::updateUniformBuffer_dynamic(size_t currentImage) const
 	for (auto& [modelID, modelInstance ] : modelManager->getModelInstances()) {
 
 		dynamic_UniformBufferObject ubo{};
-		modelInstance->setScale(glm::vec3(1.0f));
-		std::cout << modelInstance->getScale().x << " " << modelInstance->getScale().y << " " << modelInstance->getScale().z << std::endl;
 		modelInstance->setPosition(glm::vec3(static_cast<float>(sin(num)), glm::cos(num), 0.0f));
 		// 正确顺序：
 
 		glm::mat4 TransM = glm::mat4(1.0f); // 初始化为单位矩阵
 		TransM = glm::translate(TransM, modelInstance->getPosition());
 		//TransM = glm::rotate(TransM, glm::radians(90.0f), modelInstance->getRotation());
-		TransM = glm::scale(TransM, modelInstance->getScale());
+		//TransM = glm::scale(TransM, modelInstance->getScale());
 
 		modelInstance->transM = TransM;
 		ubo.model = TransM;
