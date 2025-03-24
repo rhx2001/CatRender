@@ -95,21 +95,30 @@ void GUIManager::BeginFrame() {
     {
         camera->setRotation(rotation);
     }
+    ImGui::End();
 
+    ImGui::Begin("Models");
 	auto& modelInstances = m_VulkanCore->getModelManager().getModelInstances();
 	if (ImGui::CollapsingHeader("Models")) {
 		for (auto& [modelID, modelInstance] : modelInstances) {
 			if (ImGui::TreeNode(modelInstance->name.c_str())) {
 				ImGui::Text("Model ID: %d", modelID);
-				ImGui::Text("Position: (%.2f, %.2f, %.2f)", modelInstance->getPosition().x, modelInstance->getPosition().y, modelInstance->getPosition().z);
-				ImGui::Text("Rotation: (%.2f, %.2f, %.2f)", modelInstance->getRotation().x, modelInstance->getRotation().y, modelInstance->getRotation().z);
-				ImGui::Text("Scale: (%.2f, %.2f, %.2f)", modelInstance->getScale().x, modelInstance->getScale().y, modelInstance->getScale().z);
+                glm::vec3 position = modelInstance->getPosition();
+                if (ImGui::DragFloat3("Position", &position.x)) {
+                    modelInstance->setPosition(position);
+                }
+                glm::vec3 rotation = modelInstance->getRotation();
+                if (ImGui::DragFloat3("Rotation", &rotation.x)) {
+                    modelInstance->setRotation(rotation);
+                }
+                glm::vec3 scale = modelInstance->getScale();
+                if (ImGui::DragFloat3("Scale", &scale.x)) {
+                    modelInstance->setScale(scale);
+                }
 				ImGui::TreePop();
 			}
 		}
 	}
-
-
 	ImGui::End();
 
 

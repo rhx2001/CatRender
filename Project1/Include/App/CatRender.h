@@ -3,8 +3,8 @@
 #include <memory>
 #include "Gui/GUIManager.h"
 
-const int WIDTH = 640;
-const int HEIGHT = 480;
+const int WIDTH = 1920;
+const int HEIGHT = 1080;
 
 class CatRender
 {

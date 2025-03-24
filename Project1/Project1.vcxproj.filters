@@ -61,6 +61,12 @@
     <Filter Include="源文件\ResourceManager\Model">
       <UniqueIdentifier>{9309951b-814f-471c-8dfe-9aa5ca5b1b88}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\ResourceManager\VulkanResource">
+      <UniqueIdentifier>{b4e92eae-bef1-4518-b284-c960f92f7a5a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\ResourceManager\VulkanResource">
+      <UniqueIdentifier>{825ea415-a030-415f-b027-40f1a0496c73}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\App\CatRender.h">
@@ -102,9 +108,6 @@
     <ClInclude Include="Include\Renderer\Camera.hpp">
       <Filter>头文件\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Include\ResourceManager\BufferManager.h">
-      <Filter>头文件\ResourceManager</Filter>
-    </ClInclude>
     <ClInclude Include="Include\ResourceManager\Material.h">
       <Filter>头文件\ResourceManager\Material</Filter>
     </ClInclude>
@@ -122,6 +125,12 @@
     </ClInclude>
     <ClInclude Include="Include\ResourceManager\ModelManager.h">
       <Filter>头文件\ResourceManager\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\ResourceManager\BufferManager.h">
+      <Filter>头文件\ResourceManager\VulkanResource</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\ResourceManager\DescriptorFactory.h">
+      <Filter>头文件\ResourceManager\VulkanResource</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -164,9 +173,6 @@
     <ClCompile Include="Src\Renderer\Camera.cpp">
       <Filter>源文件\Render</Filter>
     </ClCompile>
-    <ClCompile Include="Src\ResourceManager\BufferManager.cpp">
-      <Filter>源文件\ResourceManager</Filter>
-    </ClCompile>
     <ClCompile Include="Src\ResourceManager\Material.cpp">
       <Filter>源文件\ResourceManager\Material</Filter>
     </ClCompile>
@@ -184,6 +190,12 @@
     </ClCompile>
     <ClCompile Include="Include\ResourceManager\MaterialViewer.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\BufferManager.cpp">
+      <Filter>源文件\ResourceManager\VulkanResource</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\DescriptorFactory.cpp">
+      <Filter>源文件\ResourceManager\VulkanResource</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
