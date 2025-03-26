@@ -24,10 +24,12 @@ VkDescriptorPool DescriptorFactory::createPool(uint32_t maxSets, VkDescriptorPoo
     pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
     pool_info.pPoolSizes = pool_sizes.data();
     vkCreateDescriptorPool(device, &pool_info, nullptr, &pool);
+	pools.push_back(pool);
+	poolSizes.emplace(pool_info.maxSets, static_cast<uint32_t>(pools.size() - 1));
 	return pool;
 }
 
-VkResult DescriptorFactory::allocateDescriptorSets(VkDescriptorSetLayout layout, std::vector<VkDescriptorSet> set, uint32_t maxFrameInFlight)
+VkResult DescriptorFactory::allocateDescriptorSets(VkDescriptorSetLayout layout, std::vector<VkDescriptorSet>& set, uint32_t maxFrameInFlight)
 {
     std::vector<VkDescriptorSetLayout> layouts(maxFrameInFlight, layout);
     VkDescriptorSetAllocateInfo allocInfo{};
@@ -66,66 +68,92 @@ void DescriptorFactory::cleanup()
 
 
 VkDescriptorPool DescriptorFactory::getAvailablePool(uint32_t requiredSets, VkDescriptorSetLayout layout) {
+	if (pools.empty())
+	{
+		return createPool(500);
+	}
     // 优先查找有足够空间的现有池
-    for (auto& pool : pools) {
-        if (checkPoolHasSpace(pool, requiredSets, layout)) {
-            return pool;
-        }
-    }
-    // 无可用池则创建新池（根据布局估算大小）
-    return createPool(calculateOptimalPoolSize(layout));
+	auto [size, poolID] = poolSizes.top();
+	poolSizes.pop();
+	if (size > requiredSets)
+	{
+		size -= requiredSets;
+		poolSizes.emplace(size, poolID);
+		return pools.at(poolID);
+	}
+	else
+	{
+		return createPool(500);
+	}
+
+}
+//TODO:在第一个大的pool用完的时候，创建一个新的适用于layout得pool
+bool DescriptorFactory::checkPoolHasSpace(VkDescriptorPool pool, uint32_t requiredSets, VkDescriptorSetLayout layout)
+{
+	return false;
 }
 
-DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindBuffer(uint32_t frameIndex, uint32_t binding, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range, VkDescriptorType type)
+DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindBuffer(uint32_t binding, const std::vector<VkBuffer>& buffer, VkDeviceSize offset, VkDeviceSize range, VkDescriptorType type)
 {
-    VkDescriptorBufferInfo bufferInfo{ buffer, offset, range };
-    writesPerFrame[frameIndex].push_back(
-        VkWriteDescriptorSet{
-            VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            nullptr,
-            sets[frameIndex],
-            binding,
-            0,
-            1,
-            type,
-            nullptr,
-            &bufferInfo,
-        	nullptr});
-    return *this;
-}
-
-DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindImage(uint32_t frameIndex, uint32_t binding, VkImageView imageView, VkSampler sampler, VkDescriptorType type, VkImageLayout layout)
-{
-    VkDescriptorImageInfo imageInfo{ sampler, imageView, layout };
-    writesPerFrame[frameIndex].push_back(
-        VkWriteDescriptorSet{
-            VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            nullptr,
-            sets[frameIndex],
-            binding,
-            0,
-            1,
-            type,
-            &imageInfo,
-            nullptr,
-            nullptr
-        });
+	for (uint32_t frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+		VkDescriptorBufferInfo bufferInfo{ buffer[frameIndex], offset, range};
+		writesPerFrame[frameIndex].push_back(
+			VkWriteDescriptorSet{
+				VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+				nullptr,
+				sets[frameIndex],
+				binding,
+				0,
+				1,
+				type,
+				nullptr,
+				&bufferInfo,
+				nullptr });
+	}
+	build();
 	return *this;
 }
 
-DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindUniformBuffer(uint32_t frameIndex, uint32_t binding, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range)
+DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindImage(uint32_t binding, VkImageView imageView, VkSampler sampler, VkDescriptorType type, VkImageLayout ImageLayout)
 {
-	return bindBuffer(frameIndex, binding, buffer, offset, range, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+	for (size_t frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+		VkDescriptorImageInfo imageInfo{ sampler, imageView, ImageLayout };
+		writesPerFrame[frameIndex].push_back(
+			VkWriteDescriptorSet{
+				VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+				nullptr,
+				sets[frameIndex],
+				binding,
+				0,
+				1,
+				type,
+				&imageInfo,
+				nullptr,
+				nullptr
+			});
+	}
+	return *this;
 }
 
-DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindDynamicUniformBuffer(uint32_t frameIndex, uint32_t binding, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range)
+DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindUniformBuffer(uint32_t binding, const std::vector<VkBuffer>& buffer, VkDeviceSize offset, VkDeviceSize range)
 {
-	return bindBuffer(frameIndex, binding, buffer, offset, range, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
+	return bindBuffer(binding, buffer, offset, range, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+}
+
+DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindDynamicUniformBuffer(uint32_t binding, const std::vector<VkBuffer>& buffer, VkDeviceSize offset, VkDeviceSize range)
+{
+	return bindBuffer(binding, buffer, offset, range, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
+}
+
+DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindCombinedImageSampler(uint32_t binding, VkImageView imageView, VkSampler sampler, VkImageLayout ImageLayout)
+{
+
+	return bindImage(binding, imageView, sampler, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, ImageLayout);
 }
 
 
 
-std::vector<VkDescriptorSet> DescriptorFactory::FrameAwareSetBuilder::build()
+void DescriptorFactory::FrameAwareSetBuilder::build()
 {
     for (size_t i = 0; i < writesPerFrame.size(); ++i) {
         if (!writesPerFrame[i].empty()) {
@@ -138,22 +166,11 @@ std::vector<VkDescriptorSet> DescriptorFactory::FrameAwareSetBuilder::build()
             );
         }
     }
-	return sets;
 }
 
-void DescriptorFactory::FrameAwareSetBuilder::update()
+std::vector<VkDescriptorSet> DescriptorFactory::FrameAwareSetBuilder::update()
 {
-	for (size_t i = 0; i < writesPerFrame.size(); ++i) {
-		if (!writesPerFrame[i].empty()) {
-			vkUpdateDescriptorSets(
-				factory->device,
-				static_cast<uint32_t>(writesPerFrame[i].size()),
-				writesPerFrame[i].data(),
-				0,
-				nullptr
-			);
-		}
-	}
+	return sets;
 }
 
 DescriptorFactory::LayoutBuilder& DescriptorFactory::LayoutBuilder::addBinding(uint32_t binding, VkDescriptorType type, VkShaderStageFlags stageFlags, uint32_t count)

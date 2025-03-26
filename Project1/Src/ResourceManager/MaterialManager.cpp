@@ -36,7 +36,7 @@ MaterialManager::~MaterialManager()
 	{
 		//vkDestroyDescriptorSetLayout(bufferManager.getDevice(), pair.second->getDescriptorSetLayout(), nullptr);
 	}
-	vkDestroyDescriptorPool(bufferManager.getDevice(), descriptorPool, nullptr);
+	//vkDestroyDescriptorPool(bufferManager.getDevice(), descriptorPool, nullptr);
 }
 
 void MaterialManager::loadTextureImage(std::string path)

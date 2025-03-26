@@ -17,6 +17,7 @@
 
 #include "Camera.hpp"
 #include "ResourceManager/BufferManager.h"
+#include "ResourceManager/DescriptorFactory.h"
 #include "ResourceManager/MaterialManager.h"
 #include "ResourceManager/ModelManager.h"
 
@@ -216,6 +217,11 @@ private:
     std::unique_ptr<BufferManager> bufferManager;
 
     std::shared_ptr<MaterialManager> materialManager;
+
+    std::unique_ptr<DescriptorFactory> descriptorFactory;
+
+
+    VkDescriptorSetLayout ViewPrarMatLayout;
 
 
 private:

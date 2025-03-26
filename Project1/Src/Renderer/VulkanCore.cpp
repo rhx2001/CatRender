@@ -16,6 +16,7 @@ VulkanCore::VulkanCore()
 	bufferManager = std::make_unique<BufferManager>(device, physicalDevice, commandPool, graphicsQueue);
 	materialManager = std::make_shared<MaterialManager>(*bufferManager);
 	modelManager = std::make_unique<ModelManager>(materialManager);
+	descriptorFactory = std::make_unique<DescriptorFactory>(device);
 }
 
 VulkanCore::~VulkanCore()
@@ -177,7 +178,7 @@ void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 
 
 	createDescriptorSetLayout();
-	createDescriptorPool();
+	//createDescriptorPool();
 	
 	createGraphicsPipeline_Rasterizer();
 
@@ -195,10 +196,6 @@ void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 
 	createDepthResources();
 	createFramebuffers();
-
-
-
-
 
 	loadModel();
 	createVertexBuffer();
@@ -606,97 +603,109 @@ float VulkanCore::getAspectRatio()
 
  void VulkanCore::createDescriptorSetLayout()
 {
+
+
+	 descriptorSetLayout = descriptorFactory->createLayout().addUniformBuffer(0, VK_SHADER_STAGE_VERTEX_BIT)
+	.addDynamicUniformBuffer(1, VK_SHADER_STAGE_VERTEX_BIT).build();
+
+	materialSetLayout = descriptorFactory->createLayout().addCombinedImageSampler(0, VK_SHADER_STAGE_FRAGMENT_BIT).build();
+
+	materialParaSetLayout = descriptorFactory->createLayout().addDynamicUniformBuffer(0, VK_SHADER_STAGE_FRAGMENT_BIT).build();
 	 //TODO:创建一个用于material特征数的UBO以及一个用于采样器的描述符集布局
 	//创建一个描述符集布局。
-	VkDescriptorSetLayoutBinding uboLayoutBinding{};
-	uboLayoutBinding.binding = 0;
-	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	uboLayoutBinding.descriptorCount = 1;
-	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-	VkDescriptorSetLayoutBinding dynamic_uboLayoutBinding{};
-	dynamic_uboLayoutBinding.binding = 1;
-	dynamic_uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-	dynamic_uboLayoutBinding.descriptorCount = 1;
-	dynamic_uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-	//将两个描述符集布局绑定到一个数组中。
-	std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, dynamic_uboLayoutBinding };
-	VkDescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-	layoutInfo.pBindings = bindings.data();
-
-	VK_CHECK(vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout))
-
-	//创建一个采样绑定的描述符集布局。
-	VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-	samplerLayoutBinding.binding =0;
-	samplerLayoutBinding.descriptorCount = 1;
-	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	samplerLayoutBinding.pImmutableSamplers = nullptr;
-	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-	VkDescriptorSetLayoutCreateInfo TextureLayoutInfo{};
-	TextureLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	TextureLayoutInfo.bindingCount = 1;
-	TextureLayoutInfo.pBindings = &samplerLayoutBinding;
-	VK_CHECK(vkCreateDescriptorSetLayout(device, &TextureLayoutInfo, nullptr, &materialSetLayout))
-
-
-	VkDescriptorSetLayoutBinding MaterialUboLayoutBinding{};
-	MaterialUboLayoutBinding.binding = 0;
-	MaterialUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-	MaterialUboLayoutBinding.descriptorCount = 1;
-	MaterialUboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-	VkDescriptorSetLayoutCreateInfo MaterialUboLayout{};
-	MaterialUboLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	MaterialUboLayout.bindingCount = 1;
-	MaterialUboLayout.pBindings = &MaterialUboLayoutBinding;
-	VK_CHECK(vkCreateDescriptorSetLayout(device, &MaterialUboLayout, nullptr, &materialParaSetLayout))
-
 	layouts_ = { descriptorSetLayout, materialSetLayout, materialParaSetLayout };
+
+	//VkDescriptorSetLayoutBinding uboLayoutBinding{};
+	//uboLayoutBinding.binding = 0;
+	//uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	//uboLayoutBinding.descriptorCount = 1;
+	//uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+	//VkDescriptorSetLayoutBinding dynamic_uboLayoutBinding{};
+	//dynamic_uboLayoutBinding.binding = 1;
+	//dynamic_uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+	//dynamic_uboLayoutBinding.descriptorCount = 1;
+	//dynamic_uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+	////将两个描述符集布局绑定到一个数组中。
+	//std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, dynamic_uboLayoutBinding };
+	//VkDescriptorSetLayoutCreateInfo layoutInfo{};
+	//layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	//layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+	//layoutInfo.pBindings = bindings.data();
+
+	//VK_CHECK(vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout))
+
+	////创建一个采样绑定的描述符集布局。
+	//VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+	//samplerLayoutBinding.binding = 0;
+	//samplerLayoutBinding.descriptorCount = 1;
+	//samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	//samplerLayoutBinding.pImmutableSamplers = nullptr;
+	//samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+	//VkDescriptorSetLayoutCreateInfo TextureLayoutInfo{};
+	//TextureLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	//TextureLayoutInfo.bindingCount = 1;
+	//TextureLayoutInfo.pBindings = &samplerLayoutBinding;
+	//VK_CHECK(vkCreateDescriptorSetLayout(device, &TextureLayoutInfo, nullptr, &materialSetLayout))
+
+
+	//VkDescriptorSetLayoutBinding MaterialUboLayoutBinding{};
+	//MaterialUboLayoutBinding.binding = 0;
+	//MaterialUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+	//MaterialUboLayoutBinding.descriptorCount = 1;
+	//MaterialUboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+	//VkDescriptorSetLayoutCreateInfo MaterialUboLayout{};
+	//MaterialUboLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	//MaterialUboLayout.bindingCount = 1;
+	//MaterialUboLayout.pBindings = &MaterialUboLayoutBinding;
+	//VK_CHECK(vkCreateDescriptorSetLayout(device, &MaterialUboLayout, nullptr, &materialParaSetLayout))
+
+	//layouts_ = { descriptorSetLayout, materialSetLayout, materialParaSetLayout };
 }
 
- void VulkanCore::createDescriptorPool()
- {
-	 std::array<VkDescriptorPoolSize, 2> poolSizes{};
-	 poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	 poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-	 poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-	 poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-
-
-	 VkDescriptorPoolCreateInfo poolInfo{};
-	 poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	 poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-	 poolInfo.pPoolSizes = poolSizes.data();
-	 poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * 2);
-
-	 VK_CHECK(vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool))
-
-
-		 //创建和Texture相关的描述符池
-	std::array<VkDescriptorPoolSize, 2> TexturePoolSizes{};
-	TexturePoolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	TexturePoolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * TEXTURE_NUM);
-
-	TexturePoolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-	TexturePoolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * TEXTURE_NUM);
-
-	VkDescriptorPoolCreateInfo TexturePoolInfo{};
-	TexturePoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	TexturePoolInfo.poolSizeCount = static_cast<uint32_t>(TexturePoolSizes.size());
-	TexturePoolInfo.pPoolSizes = TexturePoolSizes.data();
-	TexturePoolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * 2 * TEXTURE_NUM);
-	VK_CHECK(vkCreateDescriptorPool(device, &TexturePoolInfo, nullptr, &TextureDescriptorPool))
-
-	materialManager->setDescriptorPool(TextureDescriptorPool);
-
- }
+ //void VulkanCore::createDescriptorPool()
+ //{
+ //
+ //	std::array<VkDescriptorPoolSize, 2> poolSizes{};
+ //	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+ //	poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+ //
+ //	poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+ //	poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+ //
+ //
+ //
+ //	VkDescriptorPoolCreateInfo poolInfo{};
+ //	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+ //	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+ //	poolInfo.pPoolSizes = poolSizes.data();
+ //	poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * 2);
+ //
+ //	VK_CHECK(vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool))
+ //
+ //
+ //		//创建和Texture相关的描述符池
+ //		std::array<VkDescriptorPoolSize, 2> TexturePoolSizes{};
+ //	TexturePoolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+ //	TexturePoolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * TEXTURE_NUM);
+ //
+ //	TexturePoolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+ //	TexturePoolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * TEXTURE_NUM);
+ //
+ //	VkDescriptorPoolCreateInfo TexturePoolInfo{};
+ //	TexturePoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+ //	TexturePoolInfo.poolSizeCount = static_cast<uint32_t>(TexturePoolSizes.size());
+ //	TexturePoolInfo.pPoolSizes = TexturePoolSizes.data();
+ //	TexturePoolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * 2 * TEXTURE_NUM);
+ //	VK_CHECK(vkCreateDescriptorPool(device, &TexturePoolInfo, nullptr, &TextureDescriptorPool))
+ //
+ //
+ //		materialManager->setDescriptorPool(TextureDescriptorPool);
+ //
+ //}
 
  void VulkanCore::createUniformBuffers()
  {
@@ -760,109 +769,130 @@ float VulkanCore::getAspectRatio()
  void VulkanCore::createDescriptorSets()
  {
 
-	 //创建DescriptorSets指定了将要绑定到描述符的实际缓冲区或图像资源
-	 std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
-	 VkDescriptorSetAllocateInfo allocInfo{};
-	 allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	 allocInfo.descriptorPool = descriptorPool;
-	 allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	 allocInfo.pSetLayouts = layouts.data();
-	 descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-	 VK_CHECK(vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()))
+	 descriptorSets = descriptorFactory->createFrameAwareSet(descriptorSetLayout, MAX_FRAMES_IN_FLIGHT)
+		 .bindUniformBuffer(0, uniformBuffers, sizeof(UniformBufferObject))
+		 .bindDynamicUniformBuffer(1, dynamic_uniformBuffers, 0, modelManager->getOffeset())
+		 .update();
 
+	 TextureUBODescriptorSets = descriptorFactory->createFrameAwareSet(materialParaSetLayout, MAX_FRAMES_IN_FLIGHT)
+		 .bindDynamicUniformBuffer(0, Texture_dynamic_uniformBuffers, 0, materialManager->getOffeset())
+		 .update();
 
-
-	std::vector<VkDescriptorSetLayout> TextureUBOLayouts(MAX_FRAMES_IN_FLIGHT, materialParaSetLayout);
-	 VkDescriptorSetAllocateInfo TextureUBOAllocInfo{};
-	 TextureUBOAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	 TextureUBOAllocInfo.descriptorPool = TextureDescriptorPool;
-	 TextureUBOAllocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	 TextureUBOAllocInfo.pSetLayouts = TextureUBOLayouts.data();
-	 TextureUBODescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-	 VK_CHECK(vkAllocateDescriptorSets(device, &TextureUBOAllocInfo, TextureUBODescriptorSets.data()))
-
-	 for (auto& [MaterialID, MaterialViewer] : materialManager->getMaterialViewers()) {
-		 std::vector<VkDescriptorSetLayout> TextureDescriptorLayouts(MAX_FRAMES_IN_FLIGHT, materialSetLayout);
-		 VkDescriptorSetAllocateInfo TextureAllocInfo{};
-		 TextureAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		 TextureAllocInfo.descriptorPool = TextureDescriptorPool;
-		 TextureAllocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-		 TextureAllocInfo.pSetLayouts = TextureDescriptorLayouts.data();
-		 TextureDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-		 VK_CHECK(vkAllocateDescriptorSets(device, &TextureAllocInfo, TextureDescriptorSets.data()))
-	 	 MaterialViewer->setDescriptorSets(TextureDescriptorSets);
+	 for (auto& [MaterialID, MaterialViewer] : materialManager->getMaterialViewers())
+	 {
+		 TextureDescriptorSets = descriptorFactory->createFrameAwareSet(materialSetLayout, MAX_FRAMES_IN_FLIGHT)
+			 .bindCombinedImageSampler(0, MaterialViewer->getTextureImageView(), MaterialViewer->getTextureSampler())
+			 .update();
+		 MaterialViewer->setDescriptorSets(TextureDescriptorSets);
 	 }
+	 //std::vector<std::vector<VkWriteDescriptorSet>> writesPerFrame(2, std::vector<VkWriteDescriptorSet>());
+
+
+	// //创建DescriptorSets指定了将要绑定到描述符的实际缓冲区或图像资源
+	// std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
+	// VkDescriptorSetAllocateInfo allocInfo{};
+	// allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	// allocInfo.descriptorPool = descriptorPool;
+	// allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	// allocInfo.pSetLayouts = layouts.data();
+	// descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+	// VK_CHECK(vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()))
+
+
+
+	//std::vector<VkDescriptorSetLayout> TextureUBOLayouts(MAX_FRAMES_IN_FLIGHT, materialParaSetLayout);
+	// VkDescriptorSetAllocateInfo TextureUBOAllocInfo{};
+	// TextureUBOAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	// TextureUBOAllocInfo.descriptorPool = TextureDescriptorPool;
+	// TextureUBOAllocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	// TextureUBOAllocInfo.pSetLayouts = TextureUBOLayouts.data();
+	// TextureUBODescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+	// VK_CHECK(vkAllocateDescriptorSets(device, &TextureUBOAllocInfo, TextureUBODescriptorSets.data()))
+
+	// for (auto& [MaterialID, MaterialViewer] : materialManager->getMaterialViewers()) {
+	//	 std::vector<VkDescriptorSetLayout> TextureDescriptorLayouts(MAX_FRAMES_IN_FLIGHT, materialSetLayout);
+	//	 VkDescriptorSetAllocateInfo TextureAllocInfo{};
+	//	 TextureAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	//	 TextureAllocInfo.descriptorPool = TextureDescriptorPool;
+	//	 TextureAllocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	//	 TextureAllocInfo.pSetLayouts = TextureDescriptorLayouts.data();
+	//	 TextureDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+	//	 VK_CHECK(vkAllocateDescriptorSets(device, &TextureAllocInfo, TextureDescriptorSets.data()))
+	// 	 MaterialViewer->setDescriptorSets(TextureDescriptorSets);
+	// }
 
 
 
 
-	 for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		 VkDescriptorBufferInfo bufferInfo{};
-		 bufferInfo.buffer = uniformBuffers[i];
-		 bufferInfo.offset = 0;
-		 bufferInfo.range = sizeof(UniformBufferObject);
+	// for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 
 
-		 VkDescriptorBufferInfo dynamic_bufferInfo{};
-		 dynamic_bufferInfo.buffer = dynamic_uniformBuffers[i];
-		 dynamic_bufferInfo.offset = 0;
-		 dynamic_bufferInfo.range = modelManager->getOffeset();//是单段大小
-
-		 std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-
-		 descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		 descriptorWrites[0].dstSet = descriptorSets[i];
-		 descriptorWrites[0].dstBinding = 0;
-		 descriptorWrites[0].dstArrayElement = 0;
-		 descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		 descriptorWrites[0].descriptorCount = 1;
-		 descriptorWrites[0].pBufferInfo = &bufferInfo;
-
-		 descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		 descriptorWrites[1].dstSet = descriptorSets[i];
-		 descriptorWrites[1].dstBinding = 1;
-		 descriptorWrites[1].dstArrayElement = 0;
-		 descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-		 descriptorWrites[1].descriptorCount = 1;
-		 descriptorWrites[1].pBufferInfo = &dynamic_bufferInfo;
-
-		 vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-
-		 //上传材质的UBO以及材质的imageviewer
-		 VkDescriptorBufferInfo Texture_dynamic_bufferInfo{};
-		 Texture_dynamic_bufferInfo.buffer = Texture_dynamic_uniformBuffers[i];
-		 Texture_dynamic_bufferInfo.offset = 0;
-		 Texture_dynamic_bufferInfo.range = modelManager->getOffeset();//是单段大小
-
-	 	VkWriteDescriptorSet TextureUBOWrites{};
-		 TextureUBOWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		 TextureUBOWrites.dstSet = TextureUBODescriptorSets[i];
-		 TextureUBOWrites.dstBinding = 0;
-		 TextureUBOWrites.dstArrayElement = 0;
-		 TextureUBOWrites.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-		 TextureUBOWrites.descriptorCount = 1;
-		 TextureUBOWrites.pBufferInfo = &Texture_dynamic_bufferInfo;
-		 vkUpdateDescriptorSets(device, 1, &TextureUBOWrites, 0, nullptr);
-
-		 for (auto& [MaterialID, MaterialViewer] : materialManager->getMaterialViewers()) {
-			 VkDescriptorImageInfo imageInfo{};
-			 imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			 imageInfo.imageView = MaterialViewer->getTextureImageView();
-			 imageInfo.sampler = MaterialViewer->getTextureSampler();
+	//	 VkDescriptorBufferInfo bufferInfo{};
+	//	 bufferInfo.buffer = uniformBuffers[i];
+	//	 bufferInfo.offset = 0;
+	//	 bufferInfo.range = sizeof(UniformBufferObject);
 
 
-			 //TODO:将所有需要创建布局的材质布局都update
-			 VkWriteDescriptorSet TextureDescriptorWrites{};
-			 TextureDescriptorWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			 TextureDescriptorWrites.dstSet = MaterialViewer->getDescriptorSet(i);
-			 TextureDescriptorWrites.dstBinding = 0;
-			 TextureDescriptorWrites.dstArrayElement = 0;
-			 TextureDescriptorWrites.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			 TextureDescriptorWrites.descriptorCount = 1;
-			 TextureDescriptorWrites.pImageInfo = &imageInfo;
-			 vkUpdateDescriptorSets(device, 1, &TextureDescriptorWrites, 0, nullptr);
-		 }
-	 }
+	//	 VkDescriptorBufferInfo dynamic_bufferInfo{};
+	//	 dynamic_bufferInfo.buffer = dynamic_uniformBuffers[i];
+	//	 dynamic_bufferInfo.offset = 0;
+	//	 dynamic_bufferInfo.range = modelManager->getOffeset();//是单段大小
+
+	//	 std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+
+	//	 descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	//	 descriptorWrites[0].dstSet = descriptorSets[i];
+	//	 descriptorWrites[0].dstBinding = 0;
+	//	 descriptorWrites[0].dstArrayElement = 0;
+	//	 descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	//	 descriptorWrites[0].descriptorCount = 1;
+	//	 descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+	//	 descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	//	 descriptorWrites[1].dstSet = descriptorSets[i];
+	//	 descriptorWrites[1].dstBinding = 1;
+	//	 descriptorWrites[1].dstArrayElement = 0;
+	//	 descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+	//	 descriptorWrites[1].descriptorCount = 1;
+	//	 descriptorWrites[1].pBufferInfo = &dynamic_bufferInfo;
+
+	//	 vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+
+	//	 //上传材质的UBO以及材质的imageviewer
+	//	 VkDescriptorBufferInfo Texture_dynamic_bufferInfo{};
+	//	 Texture_dynamic_bufferInfo.buffer = Texture_dynamic_uniformBuffers[i];
+	//	 Texture_dynamic_bufferInfo.offset = 0;
+	//	 Texture_dynamic_bufferInfo.range = materialManager->getOffeset();//是单段大小
+
+	// 	VkWriteDescriptorSet TextureUBOWrites{};
+	//	 TextureUBOWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	//	 TextureUBOWrites.dstSet = TextureUBODescriptorSets[i];
+	//	 TextureUBOWrites.dstBinding = 0;
+	//	 TextureUBOWrites.dstArrayElement = 0;
+	//	 TextureUBOWrites.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+	//	 TextureUBOWrites.descriptorCount = 1;
+	//	 TextureUBOWrites.pBufferInfo = &Texture_dynamic_bufferInfo;
+	//	 vkUpdateDescriptorSets(device, 1, &TextureUBOWrites, 0, nullptr);
+
+	//	 for (auto& [MaterialID, MaterialViewer] : materialManager->getMaterialViewers()) {
+	//		 VkDescriptorImageInfo imageInfo{};
+	//		 imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	//		 imageInfo.imageView = MaterialViewer->getTextureImageView();
+	//		 imageInfo.sampler = MaterialViewer->getTextureSampler();
+
+
+	//		 //TODO:将所有需要创建布局的材质布局都update
+	//		 VkWriteDescriptorSet TextureDescriptorWrites{};
+	//		 TextureDescriptorWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	//		 TextureDescriptorWrites.dstSet = MaterialViewer->getDescriptorSet(i);
+	//		 TextureDescriptorWrites.dstBinding = 0;
+	//		 TextureDescriptorWrites.dstArrayElement = 0;
+	//		 TextureDescriptorWrites.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	//		 TextureDescriptorWrites.descriptorCount = 1;
+	//		 TextureDescriptorWrites.pImageInfo = &imageInfo;
+	//		 vkUpdateDescriptorSets(device, 1, &TextureDescriptorWrites, 0, nullptr);
+	//	 }
+	// }
  }
 
 
