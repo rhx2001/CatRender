@@ -114,12 +114,12 @@ public:
 
 
     struct UniformBufferObject {
-        glm::mat4 view;
-        glm::mat4 proj;
+        alignas(16) glm::mat4 view;
+        alignas(16) glm::mat4 proj;
     };
 
     struct dynamic_UniformBufferObject {
-        glm::mat4 model;
+        alignas(16) glm::mat4 model;
     };
 
 public:

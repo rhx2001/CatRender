@@ -734,7 +734,7 @@ float VulkanCore::getAspectRatio()
 		 dynamicAlignment = (dynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);//保证偏移量是2^n
 	 }
 
-	 modelManager->setOffest(static_cast<uint32_t> (dynamicAlignment)); //设定modelmanager的dynamicbuffer的offset；
+	 modelManager->setOffst(static_cast<uint32_t> (dynamicAlignment)); //设定modelmanager的dynamicbuffer的offset；
 
 	 size_t bufferSize = dynamicAlignment * MAX_NUM_OBJECT;
 
@@ -768,21 +768,20 @@ float VulkanCore::getAspectRatio()
 
  void VulkanCore::createDescriptorSets()
  {
-
 	 descriptorSets = descriptorFactory->createFrameAwareSet(descriptorSetLayout, MAX_FRAMES_IN_FLIGHT)
-		 .bindUniformBuffer(0, uniformBuffers, sizeof(UniformBufferObject))
-		 .bindDynamicUniformBuffer(1, dynamic_uniformBuffers, 0, modelManager->getOffeset())
-		 .update();
+		 .bindUniformBuffer(0, uniformBuffers, 0, sizeof(UniformBufferObject))
+		 .bindDynamicUniformBuffer(1, dynamic_uniformBuffers, 0, modelManager->getOffset())
+		 .build();
 
 	 TextureUBODescriptorSets = descriptorFactory->createFrameAwareSet(materialParaSetLayout, MAX_FRAMES_IN_FLIGHT)
 		 .bindDynamicUniformBuffer(0, Texture_dynamic_uniformBuffers, 0, materialManager->getOffeset())
-		 .update();
+		 .build();
 
 	 for (auto& [MaterialID, MaterialViewer] : materialManager->getMaterialViewers())
 	 {
 		 TextureDescriptorSets = descriptorFactory->createFrameAwareSet(materialSetLayout, MAX_FRAMES_IN_FLIGHT)
 			 .bindCombinedImageSampler(0, MaterialViewer->getTextureImageView(), MaterialViewer->getTextureSampler())
-			 .update();
+			 .build();
 		 MaterialViewer->setDescriptorSets(TextureDescriptorSets);
 	 }
 	 //std::vector<std::vector<VkWriteDescriptorSet>> writesPerFrame(2, std::vector<VkWriteDescriptorSet>());
@@ -836,7 +835,7 @@ float VulkanCore::getAspectRatio()
 	//	 VkDescriptorBufferInfo dynamic_bufferInfo{};
 	//	 dynamic_bufferInfo.buffer = dynamic_uniformBuffers[i];
 	//	 dynamic_bufferInfo.offset = 0;
-	//	 dynamic_bufferInfo.range = modelManager->getOffeset();//是单段大小
+	//	 dynamic_bufferInfo.range = modelManager->getOffset();//是单段大小
 
 	//	 std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
 
@@ -862,7 +861,7 @@ float VulkanCore::getAspectRatio()
 	//	 VkDescriptorBufferInfo Texture_dynamic_bufferInfo{};
 	//	 Texture_dynamic_bufferInfo.buffer = Texture_dynamic_uniformBuffers[i];
 	//	 Texture_dynamic_bufferInfo.offset = 0;
-	//	 Texture_dynamic_bufferInfo.range = materialManager->getOffeset();//是单段大小
+	//	 Texture_dynamic_bufferInfo.range = materialManager->getOffset();//是单段大小
 
 	// 	VkWriteDescriptorSet TextureUBOWrites{};
 	//	 TextureUBOWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -894,8 +893,6 @@ float VulkanCore::getAspectRatio()
 	//	 }
 	// }
  }
-
-
 
  void VulkanCore::createGraphicsPipeline_Rasterizer()
 {
@@ -1089,7 +1086,7 @@ float VulkanCore::getAspectRatio()
 		framebufferInfo.height = swapChainExtent.height;
 		framebufferInfo.layers = 1;
 
-		VK_CHECK(vkCreateFramebuffer(device, &framebufferInfo, nullptr, &SwapChainFramebuffers[i]));
+		VK_CHECK(vkCreateFramebuffer(device, &framebufferInfo, nullptr, &SwapChainFramebuffers[i]))
 	}
 }
 
@@ -1231,7 +1228,6 @@ float VulkanCore::getAspectRatio()
 	//vkDestroyBuffer(device, stagingBuffer, nullptr);
 	//vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
-
 
 void VulkanCore::createCommandBuffers()
 {

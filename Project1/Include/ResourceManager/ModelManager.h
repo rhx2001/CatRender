@@ -51,8 +51,8 @@ public:
 	std::unordered_map<uint32_t, std::shared_ptr<Mesh>>* getMeshs() { return &bindMesh; }
 	std::shared_ptr<Mesh> getMesh(uint32_t meshId) { return bindMesh[meshId]; }
 
-	void setOffest(uint32_t offset) { Basic_DynamicUniformBufferOffset = offset; }
-	uint32_t getOffeset() { return Basic_DynamicUniformBufferOffset; }
+	void setOffst(uint32_t offset) { Basic_DynamicUniformBufferOffset = offset; }
+	uint32_t getOffset() const { return Basic_DynamicUniformBufferOffset; }
 
 
 private:

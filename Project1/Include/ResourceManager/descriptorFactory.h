@@ -91,6 +91,7 @@ public:
         std::vector<VkDescriptorSet> sets;
         std::vector<std::vector<VkWriteDescriptorSet>> writesPerFrame;
         DescriptorFactory* factory;
+        std::vector<std::vector<VkDescriptorBufferInfo>> bufferInfosPerFrame;
 
     public:
         FrameAwareSetBuilder(
@@ -100,6 +101,7 @@ public:
         ) : factory(factory),frameCount(frameCount) {
             factory->allocateDescriptorSets(layout, sets, frameCount);
             writesPerFrame.resize(frameCount);
+            bufferInfosPerFrame.resize(frameCount);
         }
         uint32_t frameCount;
 
@@ -118,7 +120,7 @@ public:
             VkSampler sampler, VkImageLayout ImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 
-        void build();
+        std::vector<VkDescriptorSet> build();
 
         std::vector<VkDescriptorSet>  update();
     };

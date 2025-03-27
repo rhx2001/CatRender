@@ -96,7 +96,8 @@ bool DescriptorFactory::checkPoolHasSpace(VkDescriptorPool pool, uint32_t requir
 DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindBuffer(uint32_t binding, const std::vector<VkBuffer>& buffer, VkDeviceSize offset, VkDeviceSize range, VkDescriptorType type)
 {
 	for (uint32_t frameIndex = 0; frameIndex < frameCount; frameIndex++) {
-		VkDescriptorBufferInfo bufferInfo{ buffer[frameIndex], offset, range};
+		//VkDescriptorBufferInfo bufferInfo{ buffer[frameIndex], offset, range};
+		bufferInfosPerFrame[frameIndex].push_back({ buffer[frameIndex], offset, range });
 		writesPerFrame[frameIndex].push_back(
 			VkWriteDescriptorSet{
 				VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
@@ -107,10 +108,9 @@ DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder
 				1,
 				type,
 				nullptr,
-				&bufferInfo,
+				& bufferInfosPerFrame[frameIndex].back(),
 				nullptr });
 	}
-	build();
 	return *this;
 }
 
@@ -153,7 +153,7 @@ DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder
 
 
 
-void DescriptorFactory::FrameAwareSetBuilder::build()
+std::vector<VkDescriptorSet> DescriptorFactory::FrameAwareSetBuilder::build()
 {
     for (size_t i = 0; i < writesPerFrame.size(); ++i) {
         if (!writesPerFrame[i].empty()) {
@@ -166,10 +166,12 @@ void DescriptorFactory::FrameAwareSetBuilder::build()
             );
         }
     }
+	return sets;
 }
 
 std::vector<VkDescriptorSet> DescriptorFactory::FrameAwareSetBuilder::update()
 {
+	build();
 	return sets;
 }
 
