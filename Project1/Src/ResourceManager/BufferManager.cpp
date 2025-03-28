@@ -29,10 +29,7 @@ void BufferManager::createVertexBuffer(Mesh* mesh)
 	//VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT表示这个buffer的数据可以被cpu读取
 
 	//将数据拷贝到buffer中
-	void* data;
-	vkMapMemory(device_, stagingBufferMemory, 0, bufferSize, 0, &data);
-	memcpy(data, mesh->getVertices().data(), (size_t)bufferSize);
-	vkUnmapMemory(device_, stagingBufferMemory);
+	copyFromStagingBuffer(stagingBufferMemory, mesh->getVertices().data(), static_cast<uint32_t>(bufferSize),0, 0);
 
 	VkBuffer vertexBuffer;
 	VkDeviceMemory vertexBufferMemory;
@@ -58,10 +55,8 @@ void BufferManager::createIndexBuffer(Mesh* mesh)
 	VkDeviceMemory stagingBufferMemory;
 	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-	void* data;
-	vkMapMemory(device_, stagingBufferMemory, 0, bufferSize, 0, &data);
-	memcpy(data, mesh->getIndices().data(), (size_t)bufferSize);
-	vkUnmapMemory(device_, stagingBufferMemory);
+
+	copyFromStagingBuffer(stagingBufferMemory, mesh->getIndices().data(), static_cast<uint32_t>(bufferSize), 0, 0);
 
 	VkBuffer indexBuffer;
 	VkDeviceMemory indexBufferMemory;
@@ -378,7 +373,6 @@ void BufferManager::generateMipmaps(VkImage image, VkFormat imageFormat, int32_t
 	endSingleTimeCommands(commandBuffer);
 }
 
-
 VkImageView BufferManager::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels) const
 {
 	VkImageViewCreateInfo viewInfo{};
@@ -397,7 +391,6 @@ VkImageView BufferManager::createImageView(VkImage image, VkFormat format, VkIma
 
 	return imageView;
 }
-
 
 VkCommandBuffer BufferManager::beginSingleTimeCommands() const
 {

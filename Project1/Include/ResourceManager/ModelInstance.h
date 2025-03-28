@@ -25,8 +25,13 @@ public:
 		std::cout << "rotation: " << glm::to_string(rotation) << std::endl;
 		std::cout << "scale: " << glm::to_string(scale) << std::endl;
 	}
+
+	struct dynamic_UniformBufferObject {
+		alignas(16) glm::mat4 model;
+	};
+
 	//~modelInstance();
-	void updateUniforms();
+	void updateUniforms(void* mappedUniformBuffer);
 	//TODO：将unifrom的更新放到这里
 
 	//allSet

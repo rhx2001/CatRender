@@ -25,7 +25,7 @@ private:
 
 public:
     DescriptorFactory(VkDevice& device) :device(device) {}
-    ~DescriptorFactory()=default;
+    ~DescriptorFactory();
 
     // 描述符布局构建器
     class LayoutBuilder {
@@ -90,9 +90,8 @@ public:
     private:
         std::vector<VkDescriptorSet> sets;
         std::vector<std::vector<VkWriteDescriptorSet>> writesPerFrame;
-        DescriptorFactory* factory;
-        std::vector<std::vector<VkDescriptorBufferInfo>> bufferInfosPerFrame;
-
+        std::vector<std::deque<VkDescriptorBufferInfo>> bufferInfosPerFrame;
+    	DescriptorFactory* factory;
     public:
         FrameAwareSetBuilder(
             DescriptorFactory* factory,
@@ -106,16 +105,16 @@ public:
         uint32_t frameCount;
 
         // 为特定帧添加绑定
-        FrameAwareSetBuilder& bindBuffer(uint32_t binding, const std::vector<VkBuffer>& buffer,
-            VkDeviceSize offset, VkDeviceSize range, VkDescriptorType type
+        FrameAwareSetBuilder& bindBuffer(const uint32_t &binding, const std::vector<VkBuffer>& buffer,
+            const VkDeviceSize &offset, const VkDeviceSize &range, VkDescriptorType type
         );
-        FrameAwareSetBuilder& bindImage(uint32_t binding, VkImageView imageView,
-            VkSampler sampler,VkDescriptorType type,VkImageLayout ImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+        FrameAwareSetBuilder& bindImage(uint32_t& binding, VkImageView& imageView,
+            VkSampler& sampler,VkDescriptorType type,VkImageLayout ImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
         );
-        FrameAwareSetBuilder& bindUniformBuffer(uint32_t binding, const std::vector<VkBuffer>& buffer,
-            VkDeviceSize offset = 0, VkDeviceSize range = VK_WHOLE_SIZE);
-		FrameAwareSetBuilder& bindDynamicUniformBuffer(uint32_t binding, const std::vector<VkBuffer>& buffer,
-			VkDeviceSize offset = 0, VkDeviceSize range = VK_WHOLE_SIZE);
+        FrameAwareSetBuilder& bindUniformBuffer(const uint32_t& binding, const std::vector<VkBuffer>& buffer,
+            const VkDeviceSize& offset, const VkDeviceSize& range);
+        FrameAwareSetBuilder& bindDynamicUniformBuffer(const uint32_t& binding, const std::vector<VkBuffer>& buffer,
+            const VkDeviceSize& offset, const VkDeviceSize& range);
         FrameAwareSetBuilder& bindCombinedImageSampler(uint32_t binding, VkImageView imageView,
             VkSampler sampler, VkImageLayout ImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 

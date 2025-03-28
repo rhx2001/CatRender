@@ -87,6 +87,7 @@ public:
 
 	ModelManager& getModelManager() const { return *modelManager; }
 
+    MaterialManager& getMaterialManager() const { return *materialManager; }
 public:
 
     struct QueueFamilyIndices {
@@ -118,9 +119,6 @@ public:
         alignas(16) glm::mat4 proj;
     };
 
-    struct dynamic_UniformBufferObject {
-        alignas(16) glm::mat4 model;
-    };
 
 public:
 
@@ -154,9 +152,6 @@ private:
 	VkRenderPass renderPass = VK_NULL_HANDLE;
 	VkPipeline graphicsPipeline = VK_NULL_HANDLE;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-	VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-
-	VkDescriptorPool TextureDescriptorPool = VK_NULL_HANDLE;
 
 	std::vector<VkFramebuffer> SwapChainFramebuffers;
 
@@ -221,8 +216,6 @@ private:
     std::unique_ptr<DescriptorFactory> descriptorFactory;
 
 
-    VkDescriptorSetLayout ViewPrarMatLayout;
-
 
 private:
 	void createInstance();
@@ -247,7 +240,6 @@ private:
 	void createUniformBuffers();
     void createDynamicUniformBuffers();
 
-    void createDescriptorPool();
     void createDescriptorSets();
     void createCommandBuffers();
     void createSyncObjects();

@@ -121,6 +121,28 @@ void GUIManager::BeginFrame() {
 	}
 	ImGui::End();
 
+    //ImGui::Begin("Materials");
+    //auto& Materials = m_VulkanCore->getMaterialManager().getMaterials();
+    //for (auto& [materialID, material] : Materials) {
+    //    if (ImGui::TreeNode(material->name.c_str())) {
+    //        ImGui::Text("Model ID: %d", materialID);
+    //        glm::vec4 baseColor = material->get
+    //        if (ImGui::DragFloat3("Position", &position.x)) {
+    //            modelInstance->setPosition(position);
+    //        }
+    //        glm::vec3 rotation = modelInstance->getRotation();
+    //        if (ImGui::DragFloat3("Rotation", &rotation.x)) {
+    //            modelInstance->setRotation(rotation);
+    //        }
+    //        glm::vec3 scale = modelInstance->getScale();
+    //        if (ImGui::DragFloat3("Scale", &scale.x)) {
+    //            modelInstance->setScale(scale);
+    //        }
+    //        ImGui::TreePop();
+    //    }
+    //}
+
+    //ImGui::End();
 
 
     // 示例：绘制调试窗口

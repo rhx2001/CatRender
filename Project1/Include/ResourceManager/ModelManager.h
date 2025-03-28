@@ -6,6 +6,10 @@
 class ModelManager
 {
 public:
+	struct dynamic_UniformBufferObject {
+		alignas(16) glm::mat4 model;
+	};
+
 	std::shared_ptr<MaterialManager> m_materialManager;
 
 private:

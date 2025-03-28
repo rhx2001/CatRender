@@ -46,6 +46,14 @@ VkResult DescriptorFactory::allocateDescriptorSet(VkDescriptorSetLayout layout, 
     return VkResult();
 }
 
+DescriptorFactory::~DescriptorFactory()
+{
+	for (auto pool:pools)
+	{
+		vkDestroyDescriptorPool(device, pool, nullptr);
+	}
+}
+
 DescriptorFactory::LayoutBuilder DescriptorFactory::createLayout()
 {
     return { this };
@@ -65,7 +73,6 @@ void DescriptorFactory::cleanup()
 {
 
 }
-
 
 VkDescriptorPool DescriptorFactory::getAvailablePool(uint32_t requiredSets, VkDescriptorSetLayout layout) {
 	if (pools.empty())
@@ -93,7 +100,7 @@ bool DescriptorFactory::checkPoolHasSpace(VkDescriptorPool pool, uint32_t requir
 	return false;
 }
 
-DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindBuffer(uint32_t binding, const std::vector<VkBuffer>& buffer, VkDeviceSize offset, VkDeviceSize range, VkDescriptorType type)
+DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindBuffer(const uint32_t& binding, const std::vector<VkBuffer>& buffer, const VkDeviceSize& offset, const VkDeviceSize& range, VkDescriptorType type)
 {
 	for (uint32_t frameIndex = 0; frameIndex < frameCount; frameIndex++) {
 		//VkDescriptorBufferInfo bufferInfo{ buffer[frameIndex], offset, range};
@@ -114,7 +121,7 @@ DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder
 	return *this;
 }
 
-DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindImage(uint32_t binding, VkImageView imageView, VkSampler sampler, VkDescriptorType type, VkImageLayout ImageLayout)
+DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindImage(uint32_t& binding, VkImageView &imageView, VkSampler &sampler, VkDescriptorType type, VkImageLayout ImageLayout)
 {
 	for (size_t frameIndex = 0; frameIndex < frameCount; frameIndex++) {
 		VkDescriptorImageInfo imageInfo{ sampler, imageView, ImageLayout };
@@ -135,12 +142,12 @@ DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder
 	return *this;
 }
 
-DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindUniformBuffer(uint32_t binding, const std::vector<VkBuffer>& buffer, VkDeviceSize offset, VkDeviceSize range)
+DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindUniformBuffer(const uint32_t& binding, const std::vector<VkBuffer>& buffer,const VkDeviceSize& offset, const VkDeviceSize& range)
 {
 	return bindBuffer(binding, buffer, offset, range, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 }
 
-DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindDynamicUniformBuffer(uint32_t binding, const std::vector<VkBuffer>& buffer, VkDeviceSize offset, VkDeviceSize range)
+DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder::bindDynamicUniformBuffer(const uint32_t& binding, const std::vector<VkBuffer>& buffer, const VkDeviceSize& offset, const VkDeviceSize& range)
 {
 	return bindBuffer(binding, buffer, offset, range, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
 }
@@ -155,12 +162,12 @@ DescriptorFactory::FrameAwareSetBuilder& DescriptorFactory::FrameAwareSetBuilder
 
 std::vector<VkDescriptorSet> DescriptorFactory::FrameAwareSetBuilder::build()
 {
-    for (size_t i = 0; i < writesPerFrame.size(); ++i) {
-        if (!writesPerFrame[i].empty()) {
+    for (auto &write: writesPerFrame) {
+        if (!write.empty()) {
             vkUpdateDescriptorSets(
                 factory->device,
-                static_cast<uint32_t>(writesPerFrame[i].size()),
-                writesPerFrame[i].data(),
+                static_cast<uint32_t>(write.size()),
+				write.data(),
                 0,
                 nullptr
             );

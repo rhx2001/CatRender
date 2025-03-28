@@ -63,7 +63,7 @@ public:
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
 	template<typename T>
-	void copyFromStagingBuffer(VkDeviceMemory& stageBufferMemory, T& data, uint32_t size, uint32_t offset, uint32_t flags);
+	void copyFromStagingBuffer(VkDeviceMemory& stageBufferMemory, const T& data, uint32_t size, uint32_t offset, uint32_t flags);
 
 	void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format,
 		VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
@@ -75,10 +75,12 @@ public:
 	void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels) const;
 
 	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels) const;
+
+
 };
 
 template<typename T>
-inline void BufferManager::copyFromStagingBuffer(VkDeviceMemory& stageBufferMemory, T& srcData, uint32_t size, uint32_t offset, uint32_t flags)
+inline void BufferManager::copyFromStagingBuffer(VkDeviceMemory& stageBufferMemory, const T& srcData, uint32_t size, uint32_t offset, uint32_t flags)
 {
 	void* mapData;
 	VkResult result = vkMapMemory(device_, stageBufferMemory, offset, size, flags, &mapData);

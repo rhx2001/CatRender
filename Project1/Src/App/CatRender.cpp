@@ -34,6 +34,7 @@ void CatRender::mainloop()
         Renderer->drawFrame();
     }
     //vkDeviceWaitIdle(Renderer->getDecive());
+
 }
 
 void CatRender::cleanup()
