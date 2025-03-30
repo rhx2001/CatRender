@@ -121,28 +121,27 @@ void GUIManager::BeginFrame() {
 	}
 	ImGui::End();
 
-    //ImGui::Begin("Materials");
-    //auto& Materials = m_VulkanCore->getMaterialManager().getMaterials();
-    //for (auto& [materialID, material] : Materials) {
-    //    if (ImGui::TreeNode(material->name.c_str())) {
-    //        ImGui::Text("Model ID: %d", materialID);
-    //        glm::vec4 baseColor = material->get
-    //        if (ImGui::DragFloat3("Position", &position.x)) {
-    //            modelInstance->setPosition(position);
-    //        }
-    //        glm::vec3 rotation = modelInstance->getRotation();
-    //        if (ImGui::DragFloat3("Rotation", &rotation.x)) {
-    //            modelInstance->setRotation(rotation);
-    //        }
-    //        glm::vec3 scale = modelInstance->getScale();
-    //        if (ImGui::DragFloat3("Scale", &scale.x)) {
-    //            modelInstance->setScale(scale);
-    //        }
-    //        ImGui::TreePop();
-    //    }
-    //}
+    ImGui::Begin("Materials");
+    for (auto& [materialID, material] : m_VulkanCore->getMaterialManager().getMaterials()) {
+        if (ImGui::TreeNode(material->getName().c_str())) {
+            ImGui::Text("Model ID: %d", static_cast<int>(materialID));
+            glm::vec4 baseColor = material->getBaseColor();
+            if (ImGui::ColorEdit4("Color", &baseColor.x)) {
+                material->setBaseColor(baseColor);
+            }
+			float Metallic = material->getMetallic();
+            if (ImGui::DragFloat("Metallic", &Metallic,0.01,0,1)) {
+                material->setMetallic(Metallic);
+            }
+            float Roughness = material->getRoughness();
+            if (ImGui::DragFloat("Roughness", &Roughness,0.01,0,1)) {
+                material->setRoughness(Roughness);
+            }
+            ImGui::TreePop();
+        }
+    }
 
-    //ImGui::End();
+    ImGui::End();
 
 
     // 示例：绘制调试窗口

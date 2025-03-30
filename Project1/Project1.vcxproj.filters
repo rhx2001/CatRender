@@ -188,14 +188,14 @@
     <ClCompile Include="Src\ResourceManager\MaterialManager.cpp">
       <Filter>源文件\ResourceManager\Material</Filter>
     </ClCompile>
-    <ClCompile Include="Include\ResourceManager\MaterialViewer.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Src\ResourceManager\BufferManager.cpp">
       <Filter>源文件\ResourceManager\VulkanResource</Filter>
     </ClCompile>
     <ClCompile Include="Src\ResourceManager\DescriptorFactory.cpp">
       <Filter>源文件\ResourceManager\VulkanResource</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\MaterialViewer.cpp">
+      <Filter>源文件\ResourceManager\Material</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

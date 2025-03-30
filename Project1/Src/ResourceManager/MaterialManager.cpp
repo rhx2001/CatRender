@@ -77,7 +77,8 @@ void MaterialManager::loadTextureImage(std::string path)
 	materialViewers[ImageViewerID] = std::make_shared < MaterialViewer >(Imageview, mipLevel);
 	createTextureSampler(ImageViewerID);
 	uint32_t materialId = MaterialIDGenerator();
-	materials[textureId] = std::make_shared< Material>(materialId, BasicDynamicOffset * materialId, materialViewers[ImageViewerID]);
+	std::cout << BasicDynamicOffset * materialId << " " << BasicDynamicOffset << "\n";
+	materials[textureId] = std::make_shared< Material>(materialId, BasicDynamicOffset * materialId, materialViewers[ImageViewerID], "UnNamedMaterial" + std::to_string(materialId));
 }
 
 

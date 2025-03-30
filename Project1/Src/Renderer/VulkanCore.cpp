@@ -181,13 +181,13 @@ void VulkanCore::initVulkan(GLFWwindow* window, GUIManager* m_GUIManager)
 
 	createCommandPool();
 	createCommandBuffers();
-	createTextureImage();
+
 	//createTextureImageView();
 	//createTextureSampler();
 
 	createUniformBuffers();
 	createDynamicUniformBuffers();
-
+	createTextureImage();
 	createDescriptorSets();
 
 

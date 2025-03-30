@@ -36,11 +36,11 @@ public:
 
     //¸÷ÖÖgetº¯Êý
     uint32_t getOffeset() const { return BasicDynamicOffset; }
-    std::unordered_map<uint32_t, std::shared_ptr<Material>> getMaterials() { return materials; }
+    std::unordered_map<uint32_t, std::shared_ptr<Material>>& getMaterials() { return materials; }
 	std::shared_ptr<Material>& getMaterial(uint32_t materialID) { return materials[materialID]; }
     std::unordered_map<uint32_t, std::vector<uint32_t>>& getMaterialMeshMap() { return MaterialBindMeshMap; }
     std::shared_ptr < MaterialViewer> getMaterialViewer(const uint32_t materialId) { return  materialViewers[materialId]; }
-    std::unordered_map<uint32_t, std::shared_ptr<MaterialViewer>> getMaterialViewers() { return materialViewers; }
+    std::unordered_map<uint32_t, std::shared_ptr<MaterialViewer>>& getMaterialViewers() { return materialViewers; }
 
 private:
 	VkDescriptorPool descriptorPool;

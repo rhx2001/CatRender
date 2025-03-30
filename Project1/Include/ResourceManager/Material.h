@@ -20,6 +20,7 @@ private:
         alignas(16) char reserved[32]; // Ô¤Áô¸øÎ´À´À©Õ¹
     } params;
     std::shared_ptr<MaterialViewer>(materialViewer);
+    std::string name;
     uint32_t materialId;
     uint32_t offSet;
     //std::unique_ptr<MaterialManager> materialManager;
@@ -29,13 +30,18 @@ private:
 
 public:
 
-    Material(uint32_t materialId, uint32_t offSet, const std::shared_ptr<MaterialViewer>& Viewer) :materialId(materialId), offSet(offSet), materialViewer(Viewer) {}
-    void setBaseColor(const glm::vec4& color);
+    Material(uint32_t materialId, uint32_t offSet, const std::shared_ptr<MaterialViewer>& Viewer,  std::string name) :materialId(materialId), offSet(offSet), materialViewer(Viewer),name(name) {}
+    void setBaseColor(const glm::vec4& color) { params.baseColorFactor = color; }
     void setMetallic(float value);
     void setRoughness(float value);
 	uint32_t getOffset() const { return offSet; }
 
-    void updateUniformData(void* mappedUniformBuffer);
+    glm::vec4 getBaseColor() const { return params.baseColorFactor; }
+    float getMetallic() const { return params.metallicFactor; }
+    float getRoughness() const { return params.roughnessFactor; }
+    const std::string& getName() { return name; }
+
+    void updateUniformData(void* mappedUniformBuffer) const;
 	std::shared_ptr<MaterialViewer>& getMaterialViewer() { return materialViewer; }
 
 };
