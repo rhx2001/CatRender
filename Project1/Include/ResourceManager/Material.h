@@ -5,6 +5,7 @@
 #include <vulkan/vulkan.h>
 
 #include "MaterialViewer.h"
+#include "ShaderManager.h"
 
 class Material {
 
@@ -21,6 +22,9 @@ private:
     } params;
     std::shared_ptr<MaterialViewer>(materialViewer);
     std::string name;
+    //TODO:
+    VkShaderModule vertexShader, fragmentShader;
+    std::string vertexShaderPath, fragmentShaderPath;
     uint32_t materialId;
     uint32_t offSet;
     //std::unique_ptr<MaterialManager> materialManager;
@@ -44,4 +48,9 @@ public:
     void updateUniformData(void* mappedUniformBuffer) const;
 	std::shared_ptr<MaterialViewer>& getMaterialViewer() { return materialViewer; }
 
+
+    void InitMaterial(Material& material, ShaderManager& shaderManager) {
+        this->vertexShader = shaderManager.LoadShader(this->vertexShaderPath);
+        this->fragmentShader = shaderManager.LoadShader(this->fragmentShaderPath);
+    }
 };

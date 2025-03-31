@@ -67,6 +67,12 @@
     <Filter Include="源文件\ResourceManager\VulkanResource">
       <UniqueIdentifier>{825ea415-a030-415f-b027-40f1a0496c73}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\ResourceManager\Shader">
+      <UniqueIdentifier>{df78c814-617a-4644-b67d-dca8bee69cc8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\ResourceManager\Shader">
+      <UniqueIdentifier>{9c62023d-a4e1-4ba7-8cab-8be7f9a8aff1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\App\CatRender.h">
@@ -132,6 +138,12 @@
     <ClInclude Include="Include\ResourceManager\DescriptorFactory.h">
       <Filter>头文件\ResourceManager\VulkanResource</Filter>
     </ClInclude>
+    <ClInclude Include="Include\ResourceManager\ShaderManager.h">
+      <Filter>头文件\ResourceManager\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\ResourceManager\ShaderCompiler.h">
+      <Filter>头文件\ResourceManager\Shader</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\App\CatRender.cpp">
@@ -196,6 +208,12 @@
     </ClCompile>
     <ClCompile Include="Src\ResourceManager\MaterialViewer.cpp">
       <Filter>源文件\ResourceManager\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\ShaderManager.cpp">
+      <Filter>源文件\ResourceManager\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\ShaderCompiler.cpp">
+      <Filter>源文件\ResourceManager\Shader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

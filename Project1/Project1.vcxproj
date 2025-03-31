@@ -39,6 +39,8 @@
     <ClInclude Include="Include\ResourceManager\Mesh.h" />
     <ClInclude Include="Include\ResourceManager\ModelInstance.h" />
     <ClInclude Include="Include\ResourceManager\ModelManager.h" />
+    <ClInclude Include="Include\ResourceManager\ShaderCompiler.h" />
+    <ClInclude Include="Include\ResourceManager\ShaderManager.h" />
     <ClInclude Include="Include\Window\window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -62,6 +64,8 @@
     <ClCompile Include="Src\ResourceManager\Mesh.cpp" />
     <ClCompile Include="Src\ResourceManager\ModelInstance.cpp" />
     <ClCompile Include="Src\ResourceManager\ModelManager.cpp" />
+    <ClCompile Include="Src\ResourceManager\ShaderCompiler.cpp" />
+    <ClCompile Include="Src\ResourceManager\ShaderManager.cpp" />
     <ClCompile Include="Src\Window\Window.cpp" />
   </ItemGroup>
   <ItemGroup>

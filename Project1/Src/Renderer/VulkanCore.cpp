@@ -631,10 +631,11 @@ float VulkanCore::getAspectRatio()
 
  void VulkanCore::createDynamicUniformBuffers()
  {
-	
+	//TODO:创建过程交给buffermanager
 	 VkPhysicalDeviceProperties deviceProperties;
 	 vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
 	 size_t minUboAlignment = deviceProperties.limits.minUniformBufferOffsetAlignment;//获取最小位移单位
+	//TODO:将material的结构体简化到只有一个，方便修改
 	 dynamicAlignment = sizeof(ModelManager::dynamic_UniformBufferObject);//获取uniformbuffer的大小
 	 if (minUboAlignment > 0) {
 		 dynamicAlignment = (dynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);//保证偏移量是2^n
@@ -652,7 +653,7 @@ float VulkanCore::getAspectRatio()
 		 vkMapMemory(device, dynamic_uniformBuffersMemory[i], 0, bufferSize, 0, &dynamic_uniformBuffersMapped[i]);
 	 }
 
-	 //TODO:创建材质的特征值ubo
+	 //TODO:将材质的结构体拿出来，这样保证修改的时候不用修改多处
 	 Texture_dynamicAlignment = sizeof(MaterialManager::MaterialBlock);//获取uniformbuffer的大小
 	 if (minUboAlignment > 0) {
 		 Texture_dynamicAlignment = (Texture_dynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);//保证偏移量是2^n
