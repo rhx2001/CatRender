@@ -1,9 +1,9 @@
 #include<ResourceManager/ShaderManager.h>
 
-VkShaderModule ShaderManager::LoadShader(const std::string& path)
+VkShaderModule ShaderManager::LoadShader(const std::string& path, VkShaderStageFlagBits stage)
 {
     // 1. 读取 GLSL 文件并编译为 SPIR-V（可用 glslangValidator 或 shaderc）
-    std::vector<uint32_t> spirvCode = CompileGLSLToSPIRV(path);
+    std::vector<uint32_t> spirvCode = shaderCompiler->CompileShaderFile(path, stage);
 
     // 2. 创建 VkShaderModule
     VkShaderModuleCreateInfo createInfo{};

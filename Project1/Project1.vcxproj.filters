@@ -215,6 +215,12 @@
     <ClCompile Include="Src\ResourceManager\ShaderCompiler.cpp">
       <Filter>源文件\ResourceManager\Shader</Filter>
     </ClCompile>
+    <ClCompile Include="Include\ResourceManager\PiplineManager.h">
+      <Filter>头文件\ResourceManager\VulkanResource</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ResourceManager\PiplineManager.cpp">
+      <Filter>源文件\ResourceManager\VulkanResource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\Shader.frag">
