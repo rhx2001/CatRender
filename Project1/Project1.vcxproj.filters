@@ -215,10 +215,10 @@
     <ClCompile Include="Src\ResourceManager\ShaderCompiler.cpp">
       <Filter>源文件\ResourceManager\Shader</Filter>
     </ClCompile>
-    <ClCompile Include="Include\ResourceManager\PiplineManager.h">
+    <ClCompile Include="Include\ResourceManager\PipelineManager.h">
       <Filter>头文件\ResourceManager\VulkanResource</Filter>
     </ClCompile>
-    <ClCompile Include="Src\ResourceManager\PiplineManager.cpp">
+    <ClCompile Include="Src\ResourceManager\PipelineManager.cpp">
       <Filter>源文件\ResourceManager\VulkanResource</Filter>
     </ClCompile>
   </ItemGroup>

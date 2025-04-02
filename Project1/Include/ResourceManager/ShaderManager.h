@@ -11,6 +11,8 @@ public:
 	ShaderManager(VkDevice& device) :m_device(device), shaderCompiler(std::make_unique<ShaderCompiler>()) {}
 	~ShaderManager() = default;
 	VkShaderModule LoadShader(const std::string& path, VkShaderStageFlagBits stage);
+
+	std::unordered_map<std::string, VkShaderModule>& getShaderModules() { return m_shaderCache; }
 private:
 	VkDevice& m_device;
 	std::unique_ptr<ShaderCompiler> shaderCompiler;

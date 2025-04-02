@@ -48,9 +48,4 @@ public:
     void updateUniformData(void* mappedUniformBuffer) const;
 	std::shared_ptr<MaterialViewer>& getMaterialViewer() { return materialViewer; }
 
-
-    void InitMaterial(Material& material, ShaderManager& shaderManager) {
-        this->vertexShader = shaderManager.LoadShader(this->vertexShaderPath);
-        this->fragmentShader = shaderManager.LoadShader(this->fragmentShaderPath);
-    }
 };
