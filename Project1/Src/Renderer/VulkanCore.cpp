@@ -843,7 +843,7 @@ float VulkanCore::getAspectRatio()
 	pipelineInfo.pDynamicState = &dynamicState;
 	pipelineInfo.layout = pipelineLayout;
 	pipelineInfo.renderPass = renderPass;
-	pipelineInfo.subpass = 0;
+	pipelineInfo.subpass = 2;
 	pipelineInfo.pDepthStencilState = &depthStencil;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 

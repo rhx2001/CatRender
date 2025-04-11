@@ -3,7 +3,14 @@
 VkPipeline PipelineManager::GetPipeline(PipelineInfo createInfo)
 {
 	//TODO:完善对比与创建的过程：
-	if (createinfo)
+	if (PipelineCache.find(createInfo))
+	{
+		return PipelineCache[createInfo.PresetName];
+	}
+	else
+	{
+		return CreatePipeline(createInfo);
+	}
 }
 
 VkPipeline PipelineManager::CreatePipeline(PipelineInfo createInfo)
@@ -52,7 +59,7 @@ VkPipeline PipelineManager::CreatePipeline(PipelineInfo createInfo)
 	VkViewport viewport{};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
-	viewport.width = static_cast<float>(createInfo.swapChainExtent.width);
+	viewport.width = static_cast<float>(createInfo.swapChainExtent.width);	
 	viewport.height = static_cast<float>(createInfo.swapChainExtent.height);
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
@@ -176,4 +183,59 @@ VkPipeline PipelineManager::CreatePipeline(PipelineInfo createInfo)
 	PipelineLayoutCache.push_back(graphicsPiplineLayout);
 
 	return graphicsPipeline;
+}
+
+PipelineManager::PipelineKey PipelineManager::GenerateKey(const PipelineInfo& info) {
+	PipelineKey key{};
+
+	// 哈希 Shader 模块
+	key.vertexShaderHash = std::hash<VkShaderModule>{}(info.vertexShader);
+	key.fragmentShaderHash = std::hash<VkShaderModule>{}(info.fragmentShader);
+	key.meshShaderHash = std::hash<VkShaderModule>{}(info.meshShader);
+
+	// 哈希顶点输入
+	size_t vertexInputHash = 0;
+	auto hash_combine = [](size_t& seed, const auto& val) {
+		seed ^= std::hash<std::decay_t<decltype(val)>>{}(val)+0x9e3779b9 + (seed << 6) + (seed >> 2);
+		};
+	hash_combine(vertexInputHash, info.bindingDescription.binding);
+	hash_combine(vertexInputHash, info.bindingDescription.stride);
+	hash_combine(vertexInputHash, info.bindingDescription.inputRate);
+	for (uint32_t i = 0; i < info.attributeCount; ++i) {
+		const auto& attr = info.attributeDescriptions[i];
+		hash_combine(vertexInputHash, attr.location);
+		hash_combine(vertexInputHash, attr.binding);
+		hash_combine(vertexInputHash, attr.format);
+		hash_combine(vertexInputHash, attr.offset);
+	}
+	key.vertexInputHash = vertexInputHash;
+
+	// 哈希 RenderPass 和描述符布局
+	key.renderPassHash = std::hash<VkRenderPass>{}(info.renderPass);
+	key.descriptorLayoutsHash = 0;
+	for (auto layout : info.descriptorSetLayouts) {
+		hash_combine(key.descriptorLayoutsHash, std::hash<VkDescriptorSetLayout>{}(layout));
+	}
+
+	// 哈希固定功能状态
+	key.rasterizerHash = 0;
+	hash_combine(key.rasterizerHash, info.rasterizer.polygonMode);
+	hash_combine(key.rasterizerHash, info.rasterizer.cullMode);
+	hash_combine(key.rasterizerHash, info.rasterizer.frontFace);
+	hash_combine(key.rasterizerHash, info.rasterizer.depthClampEnable);
+
+	key.depthStencilHash = 0;
+	hash_combine(key.depthStencilHash, info.depthStencil.depthTestEnable);
+	hash_combine(key.depthStencilHash, info.depthStencil.depthWriteEnable);
+	hash_combine(key.depthStencilHash, info.depthStencil.depthCompareOp);
+
+	key.colorBlendHash = 0;
+	for (uint32_t i = 0; i < info.colorBlend.attachmentCount; ++i) {
+		const auto& attach = info.colorBlend.pAttachments[i];
+		hash_combine(key.colorBlendHash, attach.blendEnable);
+		hash_combine(key.colorBlendHash, attach.srcColorBlendFactor);
+		hash_combine(key.colorBlendHash, attach.dstColorBlendFactor);
+	}
+
+	return key;
 }

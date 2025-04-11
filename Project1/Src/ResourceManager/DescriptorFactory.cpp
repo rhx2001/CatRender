@@ -79,7 +79,7 @@ VkDescriptorPool DescriptorFactory::getAvailablePool(uint32_t requiredSets, VkDe
 	{
 		return createPool(500);
 	}
-    // 优先查找有足够空间的现有池
+    // 优先查找有足够空间的现有池,使用小根堆实现
 	auto [size, poolID] = poolSizes.top();
 	poolSizes.pop();
 	if (size > requiredSets)
