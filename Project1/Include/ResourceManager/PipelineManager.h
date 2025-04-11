@@ -76,7 +76,6 @@ public:
 	PipelineManager(VkDevice& device):m_device(device){}
 	~PipelineManager() = default;
 	VkPipeline GetPipeline(PipelineInfo createInfo);
-	VkPipeline CreatePipeline(PipelineInfo createInfo);
 	VkPipeline GetOrCreatePipeline(const PipelineInfo& info);
 
 public:
@@ -90,9 +89,9 @@ private:
 		size_t vertexInputHash;
 		size_t renderPassHash;
 		size_t descriptorLayoutsHash;
-		uint32_t rasterizerHash;
-		uint32_t depthStencilHash;
-		uint32_t colorBlendHash;
+		size_t  rasterizerHash;
+		size_t  depthStencilHash;
+		size_t  colorBlendHash;
 
 		bool operator==(const PipelineKey& other) const {
 			return
@@ -112,8 +111,11 @@ private:
 	struct PipelineKeyHasher {
 		size_t operator()(const PipelineKey& key) const {
 			size_t seed = 0;
-			auto hash_combine = [&seed](size_t val) {
-				seed ^= val + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+			auto hash_combine = [&seed](const auto& val) {
+				using SeedType = std::decay_t<decltype(seed)>;
+				seed = static_cast<SeedType>(
+					seed ^ (std::hash<std::decay_t<decltype(val)>>{}(val)+0x9e3779b9 + (seed << 6) + (seed >> 2))
+					);
 				};
 			hash_combine(key.vertexShaderHash);
 			hash_combine(key.fragmentShaderHash);
