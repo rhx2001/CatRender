@@ -9,74 +9,87 @@
 class PipelineManager
 {
 public:
-	//默认配置
-	static VkPipelineDepthStencilStateCreateInfo DefaultDepthStencilState() {
-		VkPipelineDepthStencilStateCreateInfo info{};
-		info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-		info.depthTestEnable = VK_TRUE;
-		info.depthWriteEnable = VK_TRUE;
-		info.depthCompareOp = VK_COMPARE_OP_LESS;
-		info.depthBoundsTestEnable = VK_FALSE;
-		info.stencilTestEnable = VK_FALSE;
-		return info;
-	}
-
-	static VkPipelineColorBlendStateCreateInfo DefaultColorBlendState() {
-		VkPipelineColorBlendAttachmentState attachment{};
-		attachment.colorWriteMask =
-			VK_COLOR_COMPONENT_R_BIT |
-			VK_COLOR_COMPONENT_G_BIT |
-			VK_COLOR_COMPONENT_B_BIT |
-			VK_COLOR_COMPONENT_A_BIT;
-		attachment.blendEnable = VK_FALSE;
-
-		VkPipelineColorBlendStateCreateInfo info{};
-		info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		info.attachmentCount = 1;
-		info.pAttachments = &attachment;
-		return info;
-	}
-
-
 	struct PipelineInfo {
 		// Shader 模块
 		VkShaderModule vertexShader = VK_NULL_HANDLE;
 		VkShaderModule fragmentShader = VK_NULL_HANDLE;
 		VkShaderModule meshShader = VK_NULL_HANDLE; // 可选
 
-		// 顶点输入
-		VkVertexInputBindingDescription bindingDescription;
-		std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions;
-		uint32_t attributeCount = 0;
+		// 顶点输入状态
+		struct {
+			std::vector<VkVertexInputBindingDescription> bindings;
+			std::vector<VkVertexInputAttributeDescription> attributes;
+		} vertexInput;
 
-		// 渲染流程
-		VkRenderPass renderPass = VK_NULL_HANDLE;
-		uint32_t subpass = 0;
+		// 输入装配状态
+		VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		bool primitiveRestartEnable = false;
+
+		// 视口和裁剪状态
+		bool dynamicViewportState = true;
+		std::vector<VkViewport> viewports;
+		std::vector<VkRect2D> scissors;
+
+		//光栅化状态
+		struct {
+			VkPolygonMode polygonMode = VK_POLYGON_MODE_FILL;
+			VkCullModeFlags cullMode = VK_CULL_MODE_BACK_BIT;
+			VkFrontFace frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+			float lineWidth = 1.0f;
+			bool depthClampEnable = false;
+			bool rasterizerDiscardEnable = false;
+			bool depthBiasEnable = false;
+		} rasterization;
+
+
+		// 多重采样状态
+		struct {
+			VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
+			bool sampleShadingEnable = false;
+			float minSampleShading = 1.0f;
+		} multisample;
+
+		// 深度模板状态
+		struct {
+			bool depthTestEnable = true;
+			bool depthWriteEnable = true;
+			VkCompareOp depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+			bool depthBoundsTestEnable = false;
+			bool stencilTestEnable = false;
+		} depthStencil;
+
+		// 混合状态
+		struct {
+			bool blendEnable = false;
+			VkBlendFactor srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+			VkBlendFactor dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+			VkBlendOp colorBlendOp = VK_BLEND_OP_ADD;
+			VkBlendFactor srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+			VkBlendFactor dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+			VkBlendOp alphaBlendOp = VK_BLEND_OP_ADD;
+			VkColorComponentFlags colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+				VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+		} colorBlend;
 
 		// 动态状态
 		std::vector<VkDynamicState> dynamicStates = {
 			VK_DYNAMIC_STATE_VIEWPORT,
 			VK_DYNAMIC_STATE_SCISSOR
 		};
-		// 固定功能状态
-		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-		VkPipelineRasterizationStateCreateInfo rasterizer{};
-		VkPipelineDepthStencilStateCreateInfo depthStencil = DefaultDepthStencilState();
-		VkPipelineColorBlendStateCreateInfo colorBlend = DefaultColorBlendState();
-		VkPipelineMultisampleStateCreateInfo multisampling{};
 
-		// 描述符布局
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+		// 管道布局
+		VkPipelineLayout layout = VK_NULL_HANDLE;
 
-		// 标识符（用于调试）
-		std::string debugName;
+		// 渲染通道
+		VkRenderPass renderPass = VK_NULL_HANDLE;
+		uint32_t subpass = 0;
+
+		// 比较操作符
+		bool operator==(const PipelineInfo& other) const;
+
+		// 创建散列值函数
+		size_t hashValue() const;
 	};
-
-public:
-	PipelineManager(VkDevice& device):m_device(device){}
-	~PipelineManager() = default;
-	VkPipeline GetPipeline(PipelineInfo createInfo);
-	VkPipeline GetOrCreatePipeline(const PipelineInfo& info);
 
 public:
 	VkDevice& m_device;
@@ -129,6 +142,11 @@ private:
 			return seed;
 		}
 	};
+
+	PipelineManager(VkDevice& device) :m_device(device) {}
+	~PipelineManager() = default;
+	VkPipeline GetPipeline(PipelineInfo createInfo);
+	VkPipeline GetOrCreatePipeline(const PipelineInfo& info);
 
 	PipelineKey GenerateKey(const PipelineInfo& info);
 	VkPipeline CreatePipeline(const PipelineInfo& info);

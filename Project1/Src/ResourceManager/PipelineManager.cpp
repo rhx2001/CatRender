@@ -1,18 +1,6 @@
 #include <stdexcept>
 #include <ResourceManager/PipelineManager.h>
 
-VkPipeline PipelineManager::GetPipeline(PipelineInfo createInfo)
-{
-	//TODO:完善对比与创建的过程：
-	if (PipelineCache.find(createInfo))
-	{
-		return PipelineCache[createInfo.PresetName];
-	}
-	else
-	{
-		return CreatePipeline(createInfo);
-	}
-}
 
 VkPipeline PipelineManager::CreatePipeline(const PipelineInfo& info) {
     // 1. 准备 Shader 阶段
@@ -106,6 +94,34 @@ VkPipeline PipelineManager::CreatePipeline(const PipelineInfo& info) {
     return pipeline;
 }
 
+
+VkPipelineLayout PipelineManager::GetOrCreatePipelineLayout(
+    const std::vector<VkDescriptorSetLayout>& layouts)
+{
+    size_t hash = 0;
+    for (auto layout : layouts) {
+        hash ^= std::hash<VkDescriptorSetLayout>{}(layout)+0x9e3779b9 + (hash << 6) + (hash >> 2);
+    }
+
+    if (auto it = m_pipelineLayouts.find(hash); it != m_pipelineLayouts.end()) {
+        return it->second;
+    }
+
+    VkPipelineLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    layoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+    layoutInfo.pSetLayouts = layouts.data();
+
+    VkPipelineLayout layout;
+    if (vkCreatePipelineLayout(m_device, &layoutInfo, nullptr, &layout) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create pipeline layout!");
+    }
+
+    m_pipelineLayouts[hash] = layout;
+    return layout;
+}
+
+//创建pipline
 VkPipeline PipelineManager::GetOrCreatePipeline(const PipelineInfo& info) {
     PipelineKey key = GenerateKey(info);
 

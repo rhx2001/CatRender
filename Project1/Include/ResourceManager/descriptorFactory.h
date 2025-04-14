@@ -96,7 +96,7 @@ public:
         FrameAwareSetBuilder(
             DescriptorFactory* factory,
             VkDescriptorSetLayout layout,
-            uint32_t frameCount
+            uint32_t frameCount //初始化的时候就指定了有多少帧
         ) : factory(factory),frameCount(frameCount) {
             factory->allocateDescriptorSets(layout, sets, frameCount);
             writesPerFrame.resize(frameCount);
