@@ -127,7 +127,10 @@ size_t PipelineConfig::hashValue() const {
     hashCombine(hash, subpass);
 
     // 添加管道布局
-    hashCombine(hash, (size_t)layout);
+	for (const auto& layout : layout) {
+		hashCombine(hash, (size_t)layout);
+	}
+    //hashCombine(hash, (size_t)layout);
 
     return hash;
 }
@@ -136,7 +139,7 @@ size_t PipelineConfigHasher::operator()(const PipelineConfig& config) const {
     return config.hashValue();
 }
 
-VkPipeline PipelineManager::createPipeline(const PipelineConfig& config) {
+PipelineParams PipelineManager::createPipeline(const PipelineConfig& config) {
     // 创建着色器阶段信息
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
 
@@ -270,6 +273,16 @@ VkPipeline PipelineManager::createPipeline(const PipelineConfig& config) {
     dynamicState.dynamicStateCount = static_cast<uint32_t>(config.dynamicStates.size());
     dynamicState.pDynamicStates = config.dynamicStates.data();
 
+    //管线layout
+	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(config.layout.size());;
+	pipelineLayoutInfo.pSetLayouts = config.layout.data();
+
+    uint32_t ID = GenID();
+    VkPipelineLayout TempLayout;
+    vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &TempLayout);
+
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
@@ -282,9 +295,7 @@ VkPipeline PipelineManager::createPipeline(const PipelineConfig& config) {
     pipelineInfo.pDepthStencilState = &depthStencil;
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
-    pipelineInfo.layout = config.layout;
-    pipelineInfo.renderPass = config.renderPass;
-    pipelineInfo.layout = config.layout;
+    pipelineInfo.layout = TempLayout;;
     pipelineInfo.renderPass = config.renderPass;
     pipelineInfo.subpass = config.subpass;
 
@@ -293,7 +304,7 @@ VkPipeline PipelineManager::createPipeline(const PipelineConfig& config) {
         throw std::runtime_error("无法创建图形管线！");
     }
 
-    return pipeline;
+	return PipelineParams{ pipeline, TempLayout };
 }
 
 // PipelineManager::Builder 实现
@@ -301,24 +312,24 @@ PipelineManager::Builder::Builder(PipelineManager* manager) : manager(manager) {
     // 初始化默认配置
 }
 
-PipelineManager::Builder& PipelineManager::Builder::setShader(VkShaderStageFlagBits stage, const ShaderModule* shader) {
+PipelineManager::Builder& PipelineManager::Builder::setShader(VkShaderStageFlagBits stage, const VkShaderModule shader) {
     if (!shader) return *this;
 
     switch (stage) {
     case VK_SHADER_STAGE_VERTEX_BIT:
-        config.vertexShader = shader->getHandle();
+        config.vertexShader = shader;
         break;
     case VK_SHADER_STAGE_FRAGMENT_BIT:
-        config.fragmentShader = shader->getHandle();
+        config.fragmentShader = shader;
         break;
     case VK_SHADER_STAGE_GEOMETRY_BIT:
-        config.geometryShader = shader->getHandle();
+        config.geometryShader = shader;
         break;
     case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
-        config.tessControlShader = shader->getHandle();
+        config.tessControlShader = shader;
         break;
     case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
-        config.tessEvalShader = shader->getHandle();
+        config.tessEvalShader = shader;
         break;
     default:
         break;
@@ -327,11 +338,11 @@ PipelineManager::Builder& PipelineManager::Builder::setShader(VkShaderStageFlagB
     return *this;
 }
 
-PipelineManager::Builder& PipelineManager::Builder::setVertexShader(const ShaderModule* shader) {
+PipelineManager::Builder& PipelineManager::Builder::setVertexShader(const VkShaderModule shader) {
     return setShader(VK_SHADER_STAGE_VERTEX_BIT, shader);
 }
 
-PipelineManager::Builder& PipelineManager::Builder::setFragmentShader(const ShaderModule* shader) {
+PipelineManager::Builder& PipelineManager::Builder::setFragmentShader(const VkShaderModule shader) {
     return setShader(VK_SHADER_STAGE_FRAGMENT_BIT, shader);
 }
 
@@ -343,10 +354,40 @@ PipelineManager::Builder& PipelineManager::Builder::setVertexInput(
     return *this;
 }
 
+
 PipelineManager::Builder& PipelineManager::Builder::setTopology(VkPrimitiveTopology topology) {
     config.topology = topology;
     return *this;
 }
+
+PipelineManager::Builder& PipelineManager::Builder::setViewport(float x, float y, float width, float height, float minDepth, float maxDepth)
+{
+	VkViewport viewport{};
+	viewport.x = x;
+	viewport.y = y;
+	viewport.width = width;
+	viewport.height = height;
+	viewport.minDepth = minDepth;
+	viewport.maxDepth = maxDepth;
+	config.viewports.push_back(viewport);
+	return *this;
+}
+
+PipelineManager::Builder& PipelineManager::Builder::setScissor(int32_t x, int32_t y, uint32_t width, uint32_t height)
+{
+	VkRect2D scissor{};
+	scissor.offset = { x, y };
+	scissor.extent = { width, height };
+	config.scissors.push_back(scissor);
+    return *this;
+}
+
+PipelineManager::Builder& PipelineManager::Builder::setDynamicState(bool enable)
+{
+	config.dynamicViewportState = enable;
+	return *this;
+}
+
 
 PipelineManager::Builder& PipelineManager::Builder::setCullMode(VkCullModeFlags cullMode) {
     config.rasterization.cullMode = cullMode;
@@ -388,8 +429,8 @@ PipelineManager::Builder& PipelineManager::Builder::setBlendFactors(
     return *this;
 }
 
-PipelineManager::Builder& PipelineManager::Builder::setPipelineLayout(VkPipelineLayout layout) {
-    config.layout = layout;
+PipelineManager::Builder& PipelineManager::Builder::setPipelineLayout(std::vector<VkDescriptorSetLayout>& layouts) {
+    config.layout = layouts;
     return *this;
 }
 
@@ -399,10 +440,33 @@ PipelineManager::Builder& PipelineManager::Builder::setRenderPass(VkRenderPass r
     return *this;
 }
 
-VkPipeline PipelineManager::Builder::build() {
+PipelineParams PipelineManager::Builder::build() {
     return manager->getPipeline(config);
+}
+
+PipelineParams PipelineManager::getPipeline(const PipelineConfig& config) {
+    // 计算配置的哈希值
+    size_t hash = config.hashValue();
+
+    // 检查缓存中是否已存在
+    auto it = pipelineCache.find(hash);
+    if (it != pipelineCache.end()) {
+        return it->second;
+    }
+
+    // 创建新的管线
+    PipelineParams pipelineParams = createPipeline(config);
+    pipelineCache[hash] = pipelineParams;
+    return pipelineParams;
 }
 
 PipelineManager::Builder PipelineManager::createBuilder() {
     return Builder(this);
+}
+
+void PipelineManager::cleanup() {
+    for (auto& pair : pipelineCache) {
+        vkDestroyPipeline(m_device, pair.second.pipeline, nullptr);
+    }
+    pipelineCache.clear();
 }

@@ -63,20 +63,20 @@ void Mesh::setIndexBufferId(uint32_t ibId)
 	indexBufferId = ibId;
 }
 
-
-VkVertexInputBindingDescription Mesh::getBindingDescription()
+//TODO:将绑定设置为动态的，便于不同的材质以及shader绑定
+std::vector <VkVertexInputBindingDescription> Mesh::getBindingDescription()
 {
-	VkVertexInputBindingDescription bindingDescription{};
-	bindingDescription.binding = 0;
-	bindingDescription.stride = sizeof(Vertex);
-	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	std::vector<VkVertexInputBindingDescription> bindingDescription(1);
+	bindingDescription[0].binding = 0;
+	bindingDescription[0].stride = sizeof(Vertex);
+	bindingDescription[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
 	return bindingDescription;
 }
 
-std::array<VkVertexInputAttributeDescription, 3> Mesh::getAttributeDescriptions()
+std::vector<VkVertexInputAttributeDescription> Mesh::getAttributeDescriptions()
 {
-	std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
+	std::vector<VkVertexInputAttributeDescription> attributeDescriptions(3);
 
 	attributeDescriptions[0].binding = 0;
 	attributeDescriptions[0].location = 0;

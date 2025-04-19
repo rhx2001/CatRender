@@ -33,7 +33,7 @@ struct PipelineConfig {
 	struct {
 		VkPolygonMode polygonMode = VK_POLYGON_MODE_FILL;
 		VkCullModeFlags cullMode = VK_CULL_MODE_BACK_BIT;
-		VkFrontFace frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		VkFrontFace frontFace = VK_FRONT_FACE_CLOCKWISE;
 		float lineWidth = 1.0f;
 		bool depthClampEnable = false;
 		bool rasterizerDiscardEnable = false;
@@ -76,8 +76,18 @@ struct PipelineConfig {
 		VK_DYNAMIC_STATE_SCISSOR
 	};
 
+	struct 
+	{
+		float x;
+		float y;
+		float width;
+		float height;
+		float minDepth;
+		float maxDepth;
+	}viewport;
+
 	// 管道布局
-	VkPipelineLayout layout = VK_NULL_HANDLE;
+	std::vector<VkDescriptorSetLayout> layout;
 
 	// 渲染通道
 	VkRenderPass renderPass = VK_NULL_HANDLE;
@@ -88,6 +98,11 @@ struct PipelineConfig {
 
 	// 创建散列值函数
 	size_t hashValue() const;
+};
+
+struct PipelineParams {
+	VkPipeline pipeline;
+	VkPipelineLayout layout;
 };
 
 struct PipelineConfigHasher {
@@ -107,15 +122,15 @@ public:
 	~PipelineManager() { cleanup(); }
 
 public:
-	VkPipeline getPipeline(const PipelineConfig& config);
+	PipelineParams getPipeline(const PipelineConfig& config);
 	class Builder {
 	public:
 		Builder(PipelineManager* manager);
 
 		// 设置着色器
-		Builder& setShader(VkShaderStageFlagBits stage, const ShaderModule* shader);
-		Builder& setVertexShader(const ShaderModule* shader);
-		Builder& setFragmentShader(const ShaderModule* shader);
+		Builder& setShader(VkShaderStageFlagBits stage, const VkShaderModule shader);
+		Builder& setVertexShader(const VkShaderModule shader);
+		Builder& setFragmentShader(const VkShaderModule shader);
 
 		// 设置顶点输入
 		Builder& setVertexInput(const std::vector<VkVertexInputBindingDescription>& bindings,
@@ -123,6 +138,11 @@ public:
 
 		// 设置拓扑
 		Builder& setTopology(VkPrimitiveTopology topology);
+		// 设置视口和裁剪
+		Builder& setViewport(float x, float y, float width, float height,
+			float minDepth = 0.0f, float maxDepth = 1.0f);
+		Builder& setScissor(int32_t x, int32_t y, uint32_t width, uint32_t height);
+		Builder& setDynamicState(bool enable);
 
 		// 设置光栅化状态
 		Builder& setCullMode(VkCullModeFlags cullMode);
@@ -139,11 +159,11 @@ public:
 			VkBlendFactor srcAlpha, VkBlendFactor dstAlpha);
 
 		// 设置布局和渲染通道
-		Builder& setPipelineLayout(VkPipelineLayout layout);
+		Builder& setPipelineLayout(std::vector<VkDescriptorSetLayout>& layout);
 		Builder& setRenderPass(VkRenderPass renderPass, uint32_t subpass = 0);
 
 		// 构建管线
-		VkPipeline build();
+		PipelineParams build();
 
 	private:
 		PipelineManager* manager;
@@ -155,9 +175,12 @@ public:
 	// 清理所有缓存的管线
 	void cleanup();
 private:
+	uint32_t ID = -1;//管线ID
 	VkDevice& m_device;
-	std::unordered_map<size_t, VkPipeline> pipelineCache;
+	std::unordered_map<size_t, PipelineParams> pipelineCache;
 
 	// 内部创建管线的函数
-	VkPipeline createPipeline(const PipelineConfig& config);
+	PipelineParams createPipeline(const PipelineConfig& config);
+
+	uint32_t GenID() { return ID++;}
 };

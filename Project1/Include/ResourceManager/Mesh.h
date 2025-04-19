@@ -59,9 +59,9 @@ public:
 
     const std::vector<uint32_t>& getIndices() const { return indices; }
 
-    static VkVertexInputBindingDescription getBindingDescription();
+    static std::vector <VkVertexInputBindingDescription> getBindingDescription();
 
-    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions();
+    static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
 
 
 

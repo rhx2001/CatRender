@@ -20,6 +20,7 @@
 #include "ResourceManager/DescriptorFactory.h"
 #include "ResourceManager/MaterialManager.h"
 #include "ResourceManager/ModelManager.h"
+#include "ResourceManager/PipelineManager.h"
 
 
 #ifdef NDEBUG
@@ -147,7 +148,7 @@ private:
 	VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout materialSetLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout materialParaSetLayout = VK_NULL_HANDLE;
-    std::array<VkDescriptorSetLayout, 3> layouts_;
+    std::vector<VkDescriptorSetLayout> layouts_;
 
 	VkRenderPass renderPass = VK_NULL_HANDLE;
 	VkPipeline graphicsPipeline = VK_NULL_HANDLE;
@@ -215,7 +216,9 @@ private:
 
     std::unique_ptr<DescriptorFactory> descriptorFactory;
 
+    std::unique_ptr<PipelineManager> pipelineManager;
 
+    PipelineParams pipelineParams;
 
 private:
 	void createInstance();
