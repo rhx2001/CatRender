@@ -74,6 +74,7 @@ void MaterialManager::loadTextureImage(std::string path)
 
 	uint32_t ImageViewerID = ImageViewerIDGenerator();
 
+	//TODO:将texture的名字作为ImageViewer的关键字之一。
 	materialViewers[ImageViewerID] = std::make_shared < MaterialViewer >(Imageview, mipLevel);
 	createTextureSampler(ImageViewerID);
 	uint32_t materialId = MaterialIDGenerator();

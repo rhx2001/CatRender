@@ -73,6 +73,9 @@
     <Filter Include="源文件\ResourceManager\Shader">
       <UniqueIdentifier>{9c62023d-a4e1-4ba7-8cab-8be7f9a8aff1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\ResourceManager\Material\MaterialClass">
+      <UniqueIdentifier>{cb045a54-5867-42c7-921e-1b44ee9ae91e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\App\CatRender.h">
@@ -114,9 +117,6 @@
     <ClInclude Include="Include\Renderer\Camera.hpp">
       <Filter>头文件\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Include\ResourceManager\Material.h">
-      <Filter>头文件\ResourceManager\Material</Filter>
-    </ClInclude>
     <ClInclude Include="Include\ResourceManager\MaterialManager.h">
       <Filter>头文件\ResourceManager\Material</Filter>
     </ClInclude>
@@ -143,6 +143,12 @@
     </ClInclude>
     <ClInclude Include="Include\ResourceManager\ShaderCompiler.h">
       <Filter>头文件\ResourceManager\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\ResourceManager\Material.h">
+      <Filter>头文件\ResourceManager\Material\MaterialClass</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\ResourceManager\BaseMaterial.h">
+      <Filter>头文件\ResourceManager\Material\MaterialClass</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,10 +1,6 @@
 #include <iostream>
 #include <ResourceManager/Material.h>
 
-//void Material::setBaseColor(const glm::vec4& color)
-//{
-//	params.baseColorFactor = color;
-//}
 
 void Material::setMetallic(float value)
 {

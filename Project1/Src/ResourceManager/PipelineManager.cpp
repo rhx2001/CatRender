@@ -130,6 +130,31 @@ size_t PipelineConfig::hashValue() const {
 	for (const auto& layout : layout) {
 		hashCombine(hash, (size_t)layout);
 	}
+
+	// 添加动态视口状态
+	hashCombine(hash, dynamicViewportState);
+	// 添加视口和裁剪
+
+	for (const auto& viewport : viewports) {
+		hashCombine(hash, viewport.x);
+		hashCombine(hash, viewport.y);
+		hashCombine(hash, viewport.width);
+		hashCombine(hash, viewport.height);
+
+	}
+	for (const auto& scissor : scissors) {
+		hashCombine(hash, scissor.offset.x);
+		hashCombine(hash, scissor.offset.y);
+		hashCombine(hash, scissor.extent.width);
+		hashCombine(hash, scissor.extent.height);
+	}
+	// 添加多重采样状态
+	hashCombine(hash, multisample.sampleShadingEnable);
+	hashCombine(hash, multisample.samples);
+	hashCombine(hash, multisample.minSampleShading);
+
+
+
     //hashCombine(hash, (size_t)layout);
 
     return hash;

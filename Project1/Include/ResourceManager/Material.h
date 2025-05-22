@@ -1,6 +1,5 @@
 #pragma once
 #include <memory>
-#include <vector>
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
 
@@ -20,8 +19,11 @@ private:
         alignas(4) float occlusionStrength;
         alignas(16) char reserved[32]; // Ô¤Áô¸øÎ´À´À©Õ¹
     } params;
+
     std::shared_ptr<MaterialViewer>(materialViewer);
     std::string name;
+	std::string RanderPassTag = "BaseRenderPass";
+
     //TODO:
     VkShaderModule vertexShader, fragmentShader;
     std::string vertexShaderPath, fragmentShaderPath;
@@ -34,7 +36,7 @@ private:
 
 public:
 
-    Material(uint32_t materialId, uint32_t offSet, const std::shared_ptr<MaterialViewer>& Viewer,  std::string name) :materialId(materialId), offSet(offSet), materialViewer(Viewer),name(name) {}
+    Material(uint32_t materialId, uint32_t offSet, const std::vector < std::shared_ptr<MaterialViewer>>& Viewers,  std::string name) :materialId(materialId), offSet(offSet), materialViewer(Viewer),name(name) {}
     void setBaseColor(const glm::vec4& color) { params.baseColorFactor = color; }
     void setMetallic(float value);
     void setRoughness(float value);

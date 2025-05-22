@@ -31,6 +31,7 @@
     <ClInclude Include="Include\Gui\imstb_truetype.h" />
     <ClInclude Include="Include\Renderer\Camera.hpp" />
     <ClInclude Include="Include\Renderer\VulkanCore.h" />
+    <ClInclude Include="Include\ResourceManager\BaseMaterial.h" />
     <ClInclude Include="Include\ResourceManager\BufferManager.h" />
     <ClInclude Include="Include\ResourceManager\DescriptorFactory.h" />
     <ClInclude Include="Include\ResourceManager\Material.h" />
