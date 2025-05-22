@@ -1472,7 +1472,7 @@ void VulkanCore::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint32
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineParams.layout, 1, 1,
 				&materialManager->getMaterialViewer(MaterialID)->getDescriptorSet(static_cast<uint32_t>(currentFrame)), 0,nullptr);
 			//
-			std::array<uint32_t, 1> MaterialOffset = { materialManager->getMaterial(MaterialID)->getOffset() };
+			std::array<uint32_t, 1> MaterialOffset = { materialManager->getMaterial(MaterialID)->getOffSet() };
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineParams.layout, 2, 1,
 				&TextureUBODescriptorSets[currentFrame], 1, MaterialOffset.data());
 			//mesh渲染阶段
@@ -1541,7 +1541,7 @@ void VulkanCore::updateUniformBuffer_dynamic(size_t currentImage) const
 	}
 	for (auto & [materialID, material]: materialManager->getMaterials())
 	{
-		material->updateUniformData(Texture_dynamic_uniformBuffersMapped[currentImage]);
+		material->UpdateUniformDate(Texture_dynamic_uniformBuffersMapped[currentImage]);
 	}
 }
 
