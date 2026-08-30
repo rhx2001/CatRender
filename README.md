@@ -44,18 +44,28 @@ CatRender (App)
 ## 构建与运行
 
 **依赖**
-- Windows + Visual Studio 2019 / 2022
-- [Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
-- GLFW、GLM
-- 着色器编译依赖 `glslangValidator`（或 `shaders/compile.bat` 中配置的工具）
+- Windows + Visual Studio 2019 / 2022，或其他支持 C++17 的编译器
+- Vulkan SDK（提供 Vulkan headers、loader 和 `glslc`）
+- GLFW、GLM、stb_image、tinyobjloader
+- Dear ImGui 已随仓库提供，不需要另行下载
+
+第三方依赖统一从当前项目下的 `thirdpart/` 载入，不再使用任何机器绝对路径。
+依赖目录布局见 [thirdpart/README.md](thirdpart/README.md)。CMake 同时兼容按
+问题中拼写的 `thridpart/` 目录。
 
 **步骤**
-1. 用 Visual Studio 打开 `CatRender.sln`（或 `Project1/Project1.vcxproj`）。
-2. 编译前运行 `Project1/shaders/compile.bat` 生成 `.spv`（若仓库未附带）。
-3. 准备模型资源：代码默认加载 `models/viking_room.obj` 与 `models/african_head.obj`（**仓库未包含模型文件，需自行放置**）；纹理已包含在 `Project1/textures/`。
-4. 编译运行，在 `640 × 480` 窗口内实时渲染。
+1. 将第三方库整理到项目下的 `thirdpart/`，目录结构参考
+   [thirdpart/README.md](thirdpart/README.md)。
+2. 配置：`cmake -S . -B build -G "Visual Studio 17 2022" -A x64`。
+3. 编译：`cmake --build build --config Debug`。
+4. 运行 `build/Debug/CatRender.exe`（CMake 会自动复制 shaders 和 textures）。
 
-> 注：本项目为学习 / 科研用途，部分路径与资源需按本机环境配置。
+代码默认加载 `CatRenderer/models/viking_room.obj` 与
+`CatRenderer/models/african_head.obj`；仓库未包含这些模型，需要自行下载并放置。
+如果 `glslc` 可用，CMake 会自动重新编译 `CatRenderer/shaders/Shader.vert/.frag`；
+否则会使用仓库现有的 `.spv` 文件。
+
+> 注：本项目为学习 / 科研用途，模型资源和第三方库不随仓库分发。
 
 ## 运行截图
 

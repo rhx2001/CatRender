@@ -17,6 +17,13 @@
 mono_crash.*
 
 # Build results
+[Bb]uild/
+[Bb]uild-*/
+cmake-build-*/
+
+# Wavefront model assets are source resources, not compiler object files.
+!CatRenderer/models/
+!CatRenderer/models/*.obj
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
