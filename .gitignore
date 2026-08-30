@@ -361,3 +361,12 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# CMake build trees
+[Bb]uild/
+[Bb]uild-*/
+cmake-build-*/
+
+# Wavefront model assets are source resources, not compiler object files.
+!CatRenderer/models/
+!CatRenderer/models/*.obj
